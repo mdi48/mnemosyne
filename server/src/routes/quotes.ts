@@ -1,0 +1,270 @@
+import { Router, Request, Response } from 'express';
+import { quoteService } from '../services/quoteService';
+import { ApiResponse, PaginatedResponse, QuoteFilters, QuoteSortOptions } from '../types';
+
+const router = Router();
+
+// GET /api/quotes - Get all quotes with filtering, sorting, and pagination
+router.get('/', (req: Request, res: Response) => {
+  try {
+    const {
+      category,
+      author,
+      tags,
+      search,
+      isPublic,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      page = '1',
+      limit = '10'
+    } = req.query;
+
+    const filters: QuoteFilters = {};
+    if (category) filters.category = category as string;
+    if (author) filters.author = author as string;
+    if (tags) {
+      filters.tags = Array.isArray(tags) 
+        ? tags as string[] 
+        : (tags as string).split(',');
+    }
+    if (search) filters.search = search as string;
+    if (isPublic !== undefined) filters.isPublic = isPublic === 'true';
+
+    const sort: QuoteSortOptions = {
+      field: sortBy as QuoteSortOptions['field'],
+      order: sortOrder as QuoteSortOptions['order']
+    };
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+
+    const result = quoteService.getAllQuotes(filters, sort, pageNum, limitNum);
+
+    const response: PaginatedResponse<any> = {
+      success: true,
+      data: result.quotes,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: result.total,
+        totalPages: result.totalPages
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to fetch quotes'
+    };
+    res.status(500).json(response);
+  }
+});
+
+// GET /api/quotes/random - Get a random quote
+router.get('/random', (req: Request, res: Response) => {
+  try {
+    const quote = quoteService.getRandomQuote();
+    
+    if (!quote) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error: 'No quotes available'
+      };
+      return res.status(404).json(response);
+    }
+
+    const response: ApiResponse<typeof quote> = {
+      success: true,
+      data: quote
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to fetch random quote'
+    };
+    res.status(500).json(response);
+  }
+});
+
+// GET /api/quotes/:id - Get a specific quote by ID
+router.get('/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const quote = quoteService.getQuoteById(id);
+
+    if (!quote) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error: 'Quote not found'
+      };
+      return res.status(404).json(response);
+    }
+
+    const response: ApiResponse<typeof quote> = {
+      success: true,
+      data: quote
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to fetch quote'
+    };
+    res.status(500).json(response);
+  }
+});
+
+// POST /api/quotes - Create a new quote
+router.post('/', (req: Request, res: Response) => {
+  try {
+    const { text, author, category, tags, source, isPublic } = req.body;
+
+    // Basic validation
+    if (!text || !author) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error: 'Text and author are required'
+      };
+      return res.status(400).json(response);
+    }
+
+    const newQuote = quoteService.createQuote({
+      text,
+      author,
+      category,
+      tags,
+      source,
+      isPublic
+    });
+
+    const response: ApiResponse<typeof newQuote> = {
+      success: true,
+      data: newQuote,
+      message: 'Quote created successfully'
+    };
+
+    res.status(201).json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to create quote'
+    };
+    res.status(500).json(response);
+  }
+});
+
+// PUT /api/quotes/:id - Update an existing quote
+router.put('/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { text, author, category, tags, source, isPublic } = req.body;
+
+    const updatedQuote = quoteService.updateQuote(id, {
+      text,
+      author,
+      category,
+      tags,
+      source,
+      isPublic
+    });
+
+    if (!updatedQuote) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error: 'Quote not found'
+      };
+      return res.status(404).json(response);
+    }
+
+    const response: ApiResponse<typeof updatedQuote> = {
+      success: true,
+      data: updatedQuote,
+      message: 'Quote updated successfully'
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to update quote'
+    };
+    res.status(500).json(response);
+  }
+});
+
+// DELETE /api/quotes/:id - Delete a quote
+router.delete('/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const deleted = quoteService.deleteQuote(id);
+
+    if (!deleted) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error: 'Quote not found'
+      };
+      return res.status(404).json(response);
+    }
+
+    const response: ApiResponse<null> = {
+      success: true,
+      message: 'Quote deleted successfully'
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to delete quote'
+    };
+    res.status(500).json(response);
+  }
+});
+
+// GET /api/quotes/author/:author - Get quotes by author
+router.get('/author/:author', (req: Request, res: Response) => {
+  try {
+    const { author } = req.params;
+    const quotes = quoteService.getQuotesByAuthor(author);
+
+    const response: ApiResponse<typeof quotes> = {
+      success: true,
+      data: quotes
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to fetch quotes by author'
+    };
+    res.status(500).json(response);
+  }
+});
+
+// GET /api/quotes/category/:category - Get quotes by category
+router.get('/category/:category', (req: Request, res: Response) => {
+  try {
+    const { category } = req.params;
+    const quotes = quoteService.getQuotesByCategory(category);
+
+    const response: ApiResponse<typeof quotes> = {
+      success: true,
+      data: quotes
+    };
+
+    res.json(response);
+  } catch (error) {
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to fetch quotes by category'
+    };
+    res.status(500).json(response);
+  }
+});
+
+export default router;
