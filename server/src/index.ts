@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
     endpoints: {
       quotes: '/api/quotes',
       categories: '/api/categories',
-      health: '/api/health' // to do: implement health check logic
+      health: '/api/health'
     }
   });
 });
