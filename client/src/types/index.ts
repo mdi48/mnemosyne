@@ -1,0 +1,44 @@
+export interface Quote {
+  id: string;
+  text: string;
+  author: string;
+  category?: string;
+  tags?: string[];
+  createdAt: string;
+  updatedAt: string;
+  source?: string; // Where the quote came from (book, speech, etc.)
+  isPublic?: boolean;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
+  createdAt: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface CreateQuoteRequest {
+  text: string;
+  author: string;
+  category?: string;
+  tags?: string[];
+  source?: string;
+  isPublic?: boolean;
+}
