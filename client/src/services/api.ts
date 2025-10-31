@@ -58,7 +58,51 @@ class ApiClient {
     return this.request<PaginatedResponse<Quote>>(endpoint);
   }
 
-  
+  // Endpoints for Quotes
+  async getRandomQuote(): Promise<ApiResponse<Quote>> {
+    return this.request<ApiResponse<Quote>>('/quotes/random');
+  }
+
+  async getQuoteById(id: string): Promise<ApiResponse<Quote>> {
+    return this.request<ApiResponse<Quote>>(`/quotes/${id}`);
+  }
+
+  async getQuotesByAuthor(author: string): Promise<ApiResponse<Quote[]>> {
+    return this.request<ApiResponse<Quote[]>>(`/quotes/author/${encodeURIComponent(author)}`);
+  }
+
+  async createQuote(data: CreateQuoteRequest): Promise<ApiResponse<Quote>> {
+    return this.request<ApiResponse<Quote>>('/quotes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateQuote(id: string, data: Partial<CreateQuoteRequest>): Promise<ApiResponse<Quote>> {
+    return this.request<ApiResponse<Quote>>(`/quotes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteQuote(id: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/quotes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Endpoints for Categories can be added similarly
+  async getCategories(): Promise<ApiResponse<Category[]>> {
+    return this.request<ApiResponse<Category[]>>('/categories');
+  }
+
+  async getCategoryById(id: string): Promise<ApiResponse<Category>> {
+    return this.request<ApiResponse<Category>>(`/categories/${id}`);
+  }
+
+  async getQuotesByCategory(category: string): Promise<ApiResponse<Quote[]>> {
+    return this.request<ApiResponse<Quote[]>>(`/quotes/category/${encodeURIComponent(category)}`);
+  }
 }
 
 export const apiClient = new ApiClient();
