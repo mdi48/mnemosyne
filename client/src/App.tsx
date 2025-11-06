@@ -33,51 +33,102 @@ function App() {
   }, [])
 
   return (
-    <div className="p-5 font-sans">
-      <h1 className="text-xl font-bold mb-4">Mnemosyne API Test</h1>
-      
-      <div className="mb-5">
-        <button 
-          onClick={fetchRandomQuote}
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white border-none rounded cursor-pointer transition-colors"
-        >
-          Get Random Quote
-        </button>
-      </div>
-
-      {isLoading && (
-        <div className="text-gray-600">Loading...</div>
-      )}
-
-      {error && (
-        <div className="text-red-500 mb-5">
-          Error: {error}
+    <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
+      <div className="max-w-4xl w-full">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-white mb-4 tracking-wide">
+            Mnemosyne
+          </h1>
+          <p className="text-xl text-indigo-200 font-light">
+            Remember the wisdom of the ages
+          </p>
+          <div className="w-32 h-1 bg-linear-to-r from-pink-400 to-yellow-400 mx-auto mt-4 rounded-full"></div>
         </div>
-      )}
 
-      {currentQuote && !isLoading && (
-        <div className="border border-white p-5 rounded-lg bg-green-500">
-          <blockquote className="text-lg italic m-0 mb-2.5 text-white">
-            "{currentQuote.text}"
-          </blockquote>
-          <div className="font-bold text-right text-white">
-            - {currentQuote.author}
+        {/* Main Content */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12">
+          {isLoading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-400 mr-4"></div>
+              <span className="text-white text-lg">Ruminating...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-500/20 border border-red-400/50 rounded-xl p-6 mb-8 backdrop-blur">
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-red-200 font-medium">{error}</span>
+              </div>
+            </div>
+          )}
+
+          {currentQuote && !isLoading && (
+            <div className="text-center">
+              <blockquote className="text-2xl md:text-3xl font-light text-white leading-relaxed mb-8 italic">
+                "{currentQuote.text}"
+              </blockquote>
+              
+              <div className="flex items-center justify-center mb-8">
+                <div className="w-16 h-px bg-linear-to-r from-transparent via-pink-400 to-transparent"></div>
+                <span className="text-xl font-semibold text-pink-200 mx-6">
+                  - {currentQuote.author}
+                </span>
+                <div className="w-16 h-px bg-linear-to-r from-transparent via-pink-400 to-transparent"></div>
+              </div>
+
+              {currentQuote.category && (
+                <div className="mb-4">
+                  <span className="inline-block px-4 py-2 bg-indigo-500/30 text-indigo-200 rounded-full text-sm font-medium backdrop-blur border border-indigo-400/30">
+                    {currentQuote.category}
+                  </span>
+                </div>
+              )}
+
+              {currentQuote.tags && currentQuote.tags.length > 0 && (
+                <div className="flex flex-wrap justify-center gap-2 mb-8">
+                  {currentQuote.tags.map((tag, index) => (
+                    <span 
+                      key={index}
+                      className="px-3 py-1 bg-purple-500/20 text-purple-200 rounded-lg text-xs font-medium border border-purple-400/30"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Action Button */}
+          <div className="text-center">
+            <button 
+              onClick={fetchRandomQuote}
+              disabled={isLoading}
+              className="group relative px-8 py-4 bg-linear-to-r from-pink-500 to-violet-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              <span className="relative z-10">
+                {isLoading ? 'Loading...' : 'New Wisdom'}
+              </span>
+              <div className="absolute inset-0 bg-linear-to-r from-pink-600 to-violet-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+            </button>
           </div>
-          {currentQuote.category && (
-            <div className="mt-2.5 text-sm text-black">
-              Category: {currentQuote.category}
-            </div>
-          )}
-          {currentQuote.tags && currentQuote.tags.length > 0 && (
-            <div className="mt-1.5 text-sm text-black">
-              Tags: {currentQuote.tags.join(', ')}
-            </div>
-          )}
         </div>
-      )}
 
-      <div className="mt-5 text-xs text-white">
-        API Status: {error ? 'Failed' : currentQuote ? 'Connected' : 'Loading...'}
+        {/* Status Footer */}
+        <div className="text-center mt-8">
+          <div className="flex items-center justify-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${
+              error ? 'bg-red-400' : currentQuote ? 'bg-green-400' : 'bg-yellow-400'
+            }`}></div>
+            <span className="text-white/70 text-sm">
+              API Status: {error ? 'Disconnected' : currentQuote ? 'Connected' : 'Loading...'}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   )
