@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { apiClient } from './services/api'
 import type { Quote } from './types'
+import QuoteManagement from './components/QuoteManagement'
 
 function App() {
+  const [currentView, setCurrentView] = useState<'random' | 'management'>('random')
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -32,9 +34,14 @@ function App() {
     fetchRandomQuote()
   }, [])
 
+  if (currentView === 'management') {
+    return <QuoteManagement onBackToRandom={() => setCurrentView('random')} />
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-white mb-4 tracking-wide">
@@ -103,8 +110,8 @@ function App() {
             </div>
           )}
 
-          {/* Action Button */}
-          <div className="text-center">
+          {/* Action Buttons */}
+          <div className="text-center space-y-4">
             <button 
               onClick={fetchRandomQuote}
               disabled={isLoading}
@@ -115,6 +122,15 @@ function App() {
               </span>
               <div className="absolute inset-0 bg-linear-to-r from-pink-600 to-violet-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
+            
+            <div>
+              <button
+                onClick={() => setCurrentView('management')}
+                className="text-indigo-300 hover:text-white underline transition-colors"
+              >
+                Or explore all quotes...
+              </button>
+            </div>
           </div>
         </div>
 
