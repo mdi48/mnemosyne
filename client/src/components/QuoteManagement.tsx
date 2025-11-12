@@ -116,12 +116,20 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
             <h1 className="text-4xl font-bold text-white mb-2">Quote Library</h1>
             <p className="text-indigo-200">Explore and manage your collection</p>
           </div>
-          <button
-            onClick={onBackToRandom}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur border border-white/20 transition-all duration-200"
-          >
-            ← Back to Random
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => alert('Add Quote form coming soon!')}
+              className="px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
+              + Add Quote
+            </button>
+            <button
+              onClick={onBackToRandom}
+              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur border border-white/20 transition-all duration-200"
+            >
+              ← Back to Random
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
