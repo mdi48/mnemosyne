@@ -282,8 +282,39 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
               ))}
             </div>
             
-            {/* Add pagination controls */}
-            
+            {/* Pagination Controls */}
+            {pagination.totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mb-16">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(pageNum => (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      pagination.page === pageNum
+                        ? 'bg-white/20 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-white/70'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
