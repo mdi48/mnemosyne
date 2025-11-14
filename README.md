@@ -14,5 +14,17 @@ greatest minds throughout history.
 - **Modern Stack**: Built using TypeScript, Express, React, TailwindCSS, and Vite
 
 
-## 🚧 More to come soon! 🚧
+## 🚧 Roadmap 🚧
 
+### Current goals:
+- [x] Quote management interface
+- [ ] Quote creation and editing forms
+- [ ] Enhanced user features (favourites, sharing, export, etc.)
+- [ ] Form validation and error handling
+
+### Later on:
+- [ ] Database persistence
+- [ ] User authentication and personal collections
+- [ ] Production deployment and CI/CD
+
+Feel free to suggest any features you'd like to see!
