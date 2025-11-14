@@ -24,6 +24,14 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   })
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [formData, setFormData] = useState({
+    text: '',
+    author: '',
+    category: '',
+    tags: '',
+    source: ''
+  })
   const [filters, setFilters] = useState<Filters>({
     search: '',
     author: '',
@@ -118,8 +126,8 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => alert('Add Quote form coming soon!')}
-              className="px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              onClick={() => setShowAddForm(true)}
+              className="px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-medium"
             >
               + Add Quote
             </button>
@@ -131,6 +139,117 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
             </button>
           </div>
         </div>
+
+        {/* Add Quote Form Modal */}
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-white">Add New Quote</h2>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="text-white/70 hover:text-white text-2xl transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <form className="space-y-6">
+                {/* Quote Text */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Quote Text <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    value={formData.text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
+                    placeholder="Enter the quote text..."
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                {/* Author */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Author <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.author}
+                    onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
+                    placeholder="Author name"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  >
+                    <option value="" className="bg-purple-900">Select a category...</option>
+                    {categories.map(category => (
+                      <option key={category} value={category} className="bg-purple-900">
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Tags
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tags}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                    placeholder="wisdom, philosophy, life (comma-separated)"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Source */}
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Source
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.source}
+                    onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
+                    placeholder="Book title, speech, interview, etc."
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  />
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-6 mb-8">
