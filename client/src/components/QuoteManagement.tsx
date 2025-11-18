@@ -25,6 +25,9 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     text: '',
     author: '',
@@ -114,9 +117,71 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
     })
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError(null)
+
+    // Validation
+    if (!formData.text.trim()) {
+      setFormError('Quote text is required')
+      return
+    }
+    if (!formData.author.trim()) {
+      setFormError('Author is required. Set as "Anonymous" if source is unknown.')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      // Prepare data
+      const quoteData = {
+        text: formData.text.trim(),
+        author: formData.author.trim(),
+        ...(formData.category && { category: formData.category }),
+        ...(formData.tags && { tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) }),
+        ...(formData.source && { source: formData.source.trim() })
+      }
+
+      const response = await apiClient.createQuote(quoteData)
+
+      if (response.success) {
+        // Reset form
+        setFormData({ text: '', author: '', category: '', tags: '', source: '' })
+        setShowAddForm(false)
+
+        // Show success message
+        setSuccessMessage('Quote added successfully!')
+        setTimeout(() => setSuccessMessage(null), 3000)
+
+        // Refresh quotes list
+        fetchQuotes(1)
+      } else {
+        setFormError(response.error || 'Failed to create quote')
+      }
+    } catch (err) {
+      console.error('Error creating quote:', err)
+      setFormError(err instanceof Error ? err.message : 'Failed to create quote')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
       <div className="max-w-7xl mx-auto">
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="fixed top-4 right-4 z-50 bg-green-500/90 backdrop-blur-lg border border-green-400/50 rounded-xl p-4 shadow-xl animate-slide-in">
+            <div className="flex items-center gap-3">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-white font-medium">{successMessage}</span>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -154,12 +219,27 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                 </button>
               </div>
               
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Error Message */}
+                {formError && (
+                  <div className="bg-red-500/20 border border-red-400/50 rounded-lg p-4 backdrop-blur">
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-red-200 text-sm">{formError}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Quote Text */}
                 <div>
-                  <label className="block text-white text-sm font-medium mb-2">
-                    Quote Text <span className="text-red-400">*</span>
-                  </label>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <label className="text-white text-sm font-medium">
+                      Quote Text <span className="text-red-400">*</span>
+                    </label>
+                    <span className="text-white/40 text-xs italic">Quotation marks are added automatically, so do not enter them here.</span>
+                  </div>
                   <textarea
                     value={formData.text}
                     onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
@@ -241,9 +321,10 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Submit
+                    {isSubmitting ? 'Adding...' : 'Add Quote'}
                   </button>
                 </div>
               </form>
@@ -402,8 +483,30 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                     </div>
                   )}
                   
-                  <div className="text-white/50 text-xs">
-                    Added {new Date(quote.createdAt).toLocaleDateString()}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+                    <div className="text-white/50 text-xs">
+                      Added {new Date(quote.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => alert('Edit feature coming next!')}
+                        className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-colors"
+                        title="Edit quote"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => alert('Delete feature coming next!')}
+                        className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
+                        title="Delete quote"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
