@@ -30,6 +30,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; text: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null)
   const [formData, setFormData] = useState({
     text: '',
     author: '',
@@ -125,7 +126,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
 
     // Validation
     if (!formData.text.trim()) {
-      setFormError('Quote text is required')
+      setFormError('Quote text is required.')
       return
     }
     if (!formData.author.trim()) {
@@ -188,6 +189,70 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
     } finally {
       setIsDeleting(false)
     }
+  }
+
+  const handleEdit = (quote: Quote) => {
+    setEditingQuote(quote)
+    setFormData({
+      text: quote.text,
+      author: quote.author,
+      category: quote.category || '',
+      tags: quote.tags?.join(', ') || '',
+      source: quote.source || ''
+    })
+    setFormError(null)
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingQuote) return
+    
+    setFormError(null)
+
+    // Validation
+    if (!formData.text.trim()) {
+      setFormError('Quote text is required.')
+      return
+    }
+    if (!formData.author.trim()) {
+      setFormError('Author is required. Set as "Anonymous" if source is unknown.')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      const quoteData = {
+        text: formData.text.trim(),
+        author: formData.author.trim(),
+        ...(formData.category && { category: formData.category }),
+        ...(formData.tags && { tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) }),
+        ...(formData.source && { source: formData.source.trim() })
+      }
+
+      const response = await apiClient.updateQuote(editingQuote.id, quoteData)
+
+      if (response.success) {
+        setFormData({ text: '', author: '', category: '', tags: '', source: '' })
+        setEditingQuote(null)
+        setSuccessMessage('Quote updated successfully!')
+        setTimeout(() => setSuccessMessage(null), 3000)
+        fetchQuotes(pagination.page)
+      } else {
+        setFormError(response.error || 'Failed to update quote')
+      }
+    } catch (err) {
+      console.error('Error updating quote:', err)
+      setFormError(err instanceof Error ? err.message : 'Failed to update quote')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingQuote(null)
+    setFormData({ text: '', author: '', category: '', tags: '', source: '' })
+    setFormError(null)
   }
 
   return (
@@ -263,6 +328,126 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Quote Form Modal */}
+        {editingQuote && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-white">Edit Quote</h2>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-white/70 hover:text-white text-2xl transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <form onSubmit={handleUpdate} className="space-y-6">
+                {formError && (
+                  <div className="bg-red-500/20 border border-red-400/50 rounded-lg p-4 backdrop-blur">
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-red-200 text-sm">{formError}</span>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <label className="text-white text-sm font-medium">
+                      Quote Text <span className="text-red-400">*</span>
+                    </label>
+                    <span className="text-white/40 text-xs italic">Quotation marks are added automatically, so do not enter them here.</span>
+                  </div>
+                  <textarea
+                    value={formData.text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, text: e.target.value }))}
+                    placeholder="Enter the quote text..."
+                    rows={4}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Author <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.author}
+                    onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
+                    placeholder="Author name"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  >
+                    <option value="" className="bg-purple-900">Select a category...</option>
+                    {categories.map(category => (
+                      <option key={category} value={category} className="bg-purple-900">
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Tags
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tags}
+                    onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                    placeholder="wisdom, philosophy, life (comma-separated)"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white text-sm font-medium mb-2">
+                    Source
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.source}
+                    onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value }))}
+                    placeholder="Book title, speech, interview, etc."
+                    className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? 'Updating...' : 'Update Quote'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -551,7 +736,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => alert('Edit feature coming next!')}
+                        onClick={() => handleEdit(quote)}
                         className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-colors"
                         title="Edit quote"
                       >
