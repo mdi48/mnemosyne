@@ -18,12 +18,12 @@ greatest minds throughout history.
 
 ### Current goals:
 - [x] Quote management interface
-- [ ] Quote creation and editing forms
+- [x] Quote creation and editing forms
+- [ ] Database persistence
 - [ ] Enhanced user features (favourites, sharing, export, etc.)
 - [ ] Form validation and error handling
 
 ### Later on:
-- [ ] Database persistence
 - [ ] User authentication and personal collections
 - [ ] Production deployment and CI/CD
 
