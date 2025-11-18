@@ -5,7 +5,7 @@ import { ApiResponse, PaginatedResponse, QuoteFilters, QuoteSortOptions } from '
 const router = Router();
 
 // GET /api/quotes - Get all quotes with filtering, sorting, and pagination
-router.get('/', (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     const {
       category,
@@ -38,7 +38,7 @@ router.get('/', (req: Request, res: Response) => {
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
 
-    const result = quoteService.getAllQuotes(filters, sort, pageNum, limitNum);
+    const result = await quoteService.getAllQuotes(filters, sort, pageNum, limitNum);
 
     const response: PaginatedResponse<any> = {
       success: true,
@@ -62,9 +62,9 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 // GET /api/quotes/random - Get a random quote
-router.get('/random', (req: Request, res: Response) => {
+router.get('/random', async (req: Request, res: Response) => {
   try {
-    const quote = quoteService.getRandomQuote();
+    const quote = await quoteService.getRandomQuote();
     
     if (!quote) {
       const response: ApiResponse<null> = {
@@ -90,10 +90,10 @@ router.get('/random', (req: Request, res: Response) => {
 });
 
 // GET /api/quotes/:id - Get a specific quote by ID
-router.get('/:id', (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const quote = quoteService.getQuoteById(id);
+    const quote = await quoteService.getQuoteById(id);
 
     if (!quote) {
       const response: ApiResponse<null> = {
@@ -119,7 +119,7 @@ router.get('/:id', (req: Request, res: Response) => {
 });
 
 // POST /api/quotes - Create a new quote
-router.post('/', (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { text, author, category, tags, source, isPublic } = req.body;
 
@@ -132,7 +132,7 @@ router.post('/', (req: Request, res: Response) => {
       return res.status(400).json(response);
     }
 
-    const newQuote = quoteService.createQuote({
+    const newQuote = await quoteService.createQuote({
       text,
       author,
       category,
@@ -158,12 +158,12 @@ router.post('/', (req: Request, res: Response) => {
 });
 
 // PUT /api/quotes/:id - Update an existing quote
-router.put('/:id', (req: Request, res: Response) => {
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { text, author, category, tags, source, isPublic } = req.body;
 
-    const updatedQuote = quoteService.updateQuote(id, {
+    const updatedQuote = await quoteService.updateQuote(id, {
       text,
       author,
       category,
@@ -197,10 +197,10 @@ router.put('/:id', (req: Request, res: Response) => {
 });
 
 // DELETE /api/quotes/:id - Delete a quote
-router.delete('/:id', (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const deleted = quoteService.deleteQuote(id);
+    const deleted = await quoteService.deleteQuote(id);
 
     if (!deleted) {
       const response: ApiResponse<null> = {
@@ -226,10 +226,10 @@ router.delete('/:id', (req: Request, res: Response) => {
 });
 
 // GET /api/quotes/author/:author - Get quotes by author
-router.get('/author/:author', (req: Request, res: Response) => {
+router.get('/author/:author', async (req: Request, res: Response) => {
   try {
     const { author } = req.params;
-    const quotes = quoteService.getQuotesByAuthor(author);
+    const quotes = await quoteService.getQuotesByAuthor(author);
 
     const response: ApiResponse<typeof quotes> = {
       success: true,
@@ -247,10 +247,10 @@ router.get('/author/:author', (req: Request, res: Response) => {
 });
 
 // GET /api/quotes/category/:category - Get quotes by category
-router.get('/category/:category', (req: Request, res: Response) => {
+router.get('/category/:category', async (req: Request, res: Response) => {
   try {
     const { category } = req.params;
-    const quotes = quoteService.getQuotesByCategory(category);
+    const quotes = await quoteService.getQuotesByCategory(category);
 
     const response: ApiResponse<typeof quotes> = {
       success: true,

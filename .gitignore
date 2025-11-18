@@ -1,7 +1,7 @@
-node_modules/
-.env
-dist/
-build
 *.log
-/server/node_modules/
-/server/dist/
+npm-debug.log*
+build
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
