@@ -28,6 +28,8 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; text: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [formData, setFormData] = useState({
     text: '',
     author: '',
@@ -167,6 +169,27 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
     }
   }
 
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeleting(true)
+      const response = await apiClient.deleteQuote(id)
+      
+      if (response.success) {
+        setSuccessMessage('Quote deleted successfully!')
+        setTimeout(() => setSuccessMessage(null), 3000)
+        setDeleteConfirm(null)
+        fetchQuotes(pagination.page)
+      } else {
+        setError(response.error || 'Failed to delete quote')
+      }
+    } catch (err) {
+      console.error('Error deleting quote:', err)
+      setError(err instanceof Error ? err.message : 'Failed to delete quote')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
       <div className="max-w-7xl mx-auto">
@@ -204,6 +227,45 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
             </button>
           </div>
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-8 max-w-md w-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-red-500/20 rounded-full">
+                  <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white">Delete Quote?</h3>
+              </div>
+              
+              <p className="text-white/70 mb-2">Are you sure you want to delete this quote?</p>
+              <p className="text-white/90 italic text-sm mb-6 p-3 bg-white/5 rounded-lg border border-white/10">
+                "{deleteConfirm.text.substring(0, 100)}{deleteConfirm.text.length > 100 ? '...' : ''}"
+              </p>
+              <p className="text-red-300 text-sm mb-6">This action cannot be undone.</p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  disabled={isDeleting}
+                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-all duration-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDelete(deleteConfirm.id)}
+                  disabled={isDeleting}
+                  className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Add Quote Form Modal */}
         {showAddForm && (
@@ -498,7 +560,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                         </svg>
                       </button>
                       <button
-                        onClick={() => alert('Delete feature coming next!')}
+                        onClick={() => setDeleteConfirm({ id: quote.id, text: quote.text })}
                         className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
                         title="Delete quote"
                       >
