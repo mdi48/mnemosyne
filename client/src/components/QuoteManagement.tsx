@@ -56,15 +56,25 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
       setIsLoading(true)
       setError(null)
       
-      const params = {
-        page,
-        limit: pagination.limit,
-        ...(filters.search && { search: filters.search }),
-        ...(filters.author && { author: filters.author }),
-        ...(filters.category && { category: filters.category }),
-        sortBy: filters.sortBy,
-        sortOrder: filters.sortOrder
-      }
+      const params = showFavourites
+        ? {
+            page: 1,
+            limit: 1000, // Fetch up to 1000 quotes when filtering favourites
+            ...(filters.search && { search: filters.search }),
+            ...(filters.author && { author: filters.author }),
+            ...(filters.category && { category: filters.category }),
+            sortBy: filters.sortBy,
+            sortOrder: filters.sortOrder
+          }
+        : {
+            page,
+            limit: pagination.limit,
+            ...(filters.search && { search: filters.search }),
+            ...(filters.author && { author: filters.author }),
+            ...(filters.category && { category: filters.category }),
+            sortBy: filters.sortBy,
+            sortOrder: filters.sortOrder
+          }
 
       const response = await apiClient.getQuotes(params)
       
@@ -75,10 +85,22 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
         if (showFavourites) {
           const favourites = getFavourites()
           filteredQuotes = response.data.filter(q => favourites.includes(q.id))
+          
+          const startIdx = (page - 1) * pagination.limit
+          const endIdx = startIdx + pagination.limit
+          const paginatedQuotes = filteredQuotes.slice(startIdx, endIdx)
+          
+          setQuotes(paginatedQuotes)
+          setPagination({
+            page,
+            limit: pagination.limit,
+            total: filteredQuotes.length,
+            totalPages: Math.ceil(filteredQuotes.length / pagination.limit)
+          })
+        } else {
+          setQuotes(filteredQuotes)
+          setPagination(response.pagination)
         }
-        
-        setQuotes(filteredQuotes)
-        setPagination(response.pagination)
       } else {
         setError(response.error || 'Failed to load quotes')
       }
