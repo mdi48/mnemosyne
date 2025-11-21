@@ -279,6 +279,27 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
           </div>
           <div className="flex gap-3">
             <button
+              onClick={() => {
+                const dataStr = JSON.stringify(quotes, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `mnemosyne-quotes-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                setSuccessMessage('Quotes exported successfully!');
+                setTimeout(() => setSuccessMessage(null), 3000);
+              }}
+              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur border border-white/20 transition-all duration-200 flex items-center gap-2"
+              title="Export quotes as JSON"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Export
+            </button>
+            <button
               onClick={() => setShowAddForm(true)}
               className="px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-medium"
             >
@@ -735,6 +756,20 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                       Added {new Date(quote.createdAt).toLocaleDateString()}
                     </div>
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const text = `"${quote.text}" - ${quote.author}`;
+                          navigator.clipboard.writeText(text);
+                          setSuccessMessage('Quote copied to clipboard!');
+                          setTimeout(() => setSuccessMessage(null), 2000);
+                        }}
+                        className="p-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg transition-colors"
+                        title="Copy quote"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </button>
                       <button
                         onClick={() => handleEdit(quote)}
                         className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-colors"

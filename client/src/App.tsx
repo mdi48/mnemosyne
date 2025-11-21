@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { apiClient } from './services/api'
 import type { Quote } from './types'
 import QuoteManagement from './components/QuoteManagement'
@@ -8,8 +8,9 @@ function App() {
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  const fetchRandomQuote = async () => {
+  const fetchRandomQuote = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -28,11 +29,41 @@ function App() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  const fetchQuoteById = useCallback(async (id: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const response = await apiClient.getQuoteById(id)
+      
+      if (response.success && response.data) {
+        setCurrentQuote(response.data)
+      } else {
+        setError(response.error || 'Quote not found')
+        // Fall back to random quote after a moment
+        setTimeout(() => fetchRandomQuote(), 2000)
+      }
+    } catch (err) {
+      console.error('Error fetching quote:', err)
+      setError('Failed to load quote')
+      setTimeout(() => fetchRandomQuote(), 2000)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [fetchRandomQuote])
 
   useEffect(() => {
-    fetchRandomQuote()
-  }, [])
+    // Check if there's a quote ID in the URL
+    const params = new URLSearchParams(window.location.search)
+    const quoteId = params.get('quote')
+    
+    if (quoteId) {
+      fetchQuoteById(quoteId)
+    } else {
+      fetchRandomQuote()
+    }
+  }, [fetchRandomQuote, fetchQuoteById])
 
   if (currentView === 'management') {
     return <QuoteManagement onBackToRandom={() => setCurrentView('random')} />
@@ -122,6 +153,52 @@ function App() {
               </span>
               <div className="absolute inset-0 bg-linear-to-r from-pink-600 to-violet-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
+            
+            {currentQuote && !isLoading && (
+              <div className="flex flex-wrap justify-center gap-3">
+                <button
+                  onClick={() => {
+                    const text = `"${currentQuote.text}" - ${currentQuote.author}`;
+                    navigator.clipboard.writeText(text);
+                    setSuccessMessage('Quote copied to clipboard!');
+                    setTimeout(() => setSuccessMessage(null), 2000);
+                  }}
+                  className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl shadow-lg hover:bg-white/20 transform hover:scale-105 transition-all duration-200 border border-white/20 backdrop-blur"
+                  title="Copy quote"
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy
+                  </span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}?quote=${currentQuote.id}`;
+                    navigator.clipboard.writeText(url);
+                    setSuccessMessage('Link copied to clipboard!');
+                    setTimeout(() => setSuccessMessage(null), 2000);
+                  }}
+                  className="px-6 py-3 bg-white/10 text-white font-medium rounded-xl shadow-lg hover:bg-white/20 transform hover:scale-105 transition-all duration-200 border border-white/20 backdrop-blur"
+                  title="Share link"
+                >
+                  <span className="flex items-center gap-2">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Share
+                  </span>
+                </button>
+              </div>
+            )}
+            
+            {successMessage && (
+              <div className="bg-green-500/20 border border-green-400/50 rounded-xl p-3 backdrop-blur animate-fade-in">
+                <span className="text-green-200 text-sm font-medium">{successMessage}</span>
+              </div>
+            )}
             
             <div>
               <button
