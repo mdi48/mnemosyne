@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiClient } from '../services/api'
 import type { Quote } from '../types'
+import { toggleFavourite, getFavourites } from '../utils/favourites'
 
 interface QuoteManagementProps {
   onBackToRandom: () => void
@@ -47,6 +48,8 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   })
   const [categories, setCategories] = useState<string[]>([])
   const [authors, setAuthors] = useState<string[]>([])
+  const [showFavourites, setShowFavourites] = useState(false)
+  const [favouriteIds, setFavouriteIds] = useState<Set<string>>(new Set())
 
   const fetchQuotes = useCallback(async (page = 1) => {
     try {
@@ -66,7 +69,15 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
       const response = await apiClient.getQuotes(params)
       
       if (response.success && response.data) {
-        setQuotes(response.data)
+        let filteredQuotes = response.data
+        
+        // Filter by favourites if showFavourites is true
+        if (showFavourites) {
+          const favourites = getFavourites()
+          filteredQuotes = response.data.filter(q => favourites.includes(q.id))
+        }
+        
+        setQuotes(filteredQuotes)
         setPagination(response.pagination)
       } else {
         setError(response.error || 'Failed to load quotes')
@@ -77,7 +88,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
     } finally {
       setIsLoading(false)
     }
-  }, [filters, pagination.limit])
+  }, [filters, pagination.limit, showFavourites])
 
   const fetchMetadata = async () => {
     try {
@@ -100,6 +111,8 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   useEffect(() => {
     fetchQuotes(1)
     fetchMetadata()
+    // Load favourites from localStorage
+    setFavouriteIds(new Set(getFavourites()))
   }, [filters, fetchQuotes])
 
   const handleFilterChange = (key: keyof Filters, value: string) => {
@@ -279,8 +292,37 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
           </div>
           <div className="flex gap-3">
             <button
+              onClick={() => setShowFavourites(!showFavourites)}
+              className={`px-6 py-3 rounded-xl backdrop-blur border transition-all duration-200 flex items-center gap-2 ${
+                showFavourites 
+                  ? 'bg-pink-500/30 border-pink-400/50 text-pink-200' 
+                  : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+              }`}
+              title={showFavourites ? 'Show all quotes' : 'Show favourites only'}
+            >
+              <svg 
+                className="w-5 h-5" 
+                fill={showFavourites ? 'currentColor' : 'none'}
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                />
+              </svg>
+              {showFavourites ? 'Favourites' : 'All Quotes'}
+            </button>
+            <button
               onClick={() => {
-                const dataStr = JSON.stringify(quotes, null, 2);
+                // Add favourite status to each quote
+                const exportData = quotes.map(quote => ({
+                  ...quote,
+                  isFavourite: favouriteIds.has(quote.id)
+                }));
+                const dataStr = JSON.stringify(exportData, null, 2);
                 const dataBlob = new Blob([dataStr], { type: 'application/json' });
                 const url = URL.createObjectURL(dataBlob);
                 const link = document.createElement('a');
@@ -756,6 +798,34 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                       Added {new Date(quote.createdAt).toLocaleDateString()}
                     </div>
                     <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const newState = toggleFavourite(quote.id);
+                          setFavouriteIds(new Set(getFavourites()));
+                          setSuccessMessage(newState ? 'Added to favourites!' : 'Removed from favourites');
+                          setTimeout(() => setSuccessMessage(null), 2000);
+                        }}
+                        className={`p-2 rounded-lg transition-colors ${
+                          favouriteIds.has(quote.id)
+                            ? 'bg-pink-500/30 text-pink-300 hover:bg-pink-500/40'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
+                        title={favouriteIds.has(quote.id) ? 'Remove from favourites' : 'Add to favourites'}
+                      >
+                        <svg 
+                          className="w-4 h-4" 
+                          fill={favouriteIds.has(quote.id) ? 'currentColor' : 'none'}
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round" 
+                            strokeWidth={2} 
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                          />
+                        </svg>
+                      </button>
                       <button
                         onClick={() => {
                           const text = `"${quote.text}" - ${quote.author}`;

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiClient } from './services/api'
 import type { Quote } from './types'
 import QuoteManagement from './components/QuoteManagement'
+import { isFavourite, toggleFavourite } from './utils/favourites'
 
 function App() {
   const [currentView, setCurrentView] = useState<'random' | 'management'>('random')
@@ -9,6 +10,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [isFavourited, setIsFavourited] = useState(false)
 
   const fetchRandomQuote = useCallback(async () => {
     try {
@@ -18,6 +20,7 @@ function App() {
       
       if (response.success && response.data) {
         setCurrentQuote(response.data)
+        setIsFavourited(isFavourite(response.data.id))
       } else {
         // API returned an error response
         setError(response.error || 'No quote available')
@@ -39,6 +42,7 @@ function App() {
       
       if (response.success && response.data) {
         setCurrentQuote(response.data)
+        setIsFavourited(isFavourite(response.data.id))
       } else {
         setError(response.error || 'Quote not found')
         // Fall back to random quote after a moment
@@ -115,6 +119,32 @@ function App() {
                 <span className="text-xl font-semibold text-pink-200 mx-6">
                   - {currentQuote.author}
                 </span>
+                <button
+                  onClick={() => {
+                    const newState = toggleFavourite(currentQuote.id);
+                    setIsFavourited(newState);
+                    setSuccessMessage(newState ? 'Added to favourites!' : 'Removed from favourites');
+                    setTimeout(() => setSuccessMessage(null), 2000);
+                  }}
+                  className="ml-3 p-2 hover:bg-white/10 rounded-full transition-all duration-200 transform hover:scale-110"
+                  title={isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                  aria-label={isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                >
+                  <svg 
+                    className="w-6 h-6 transition-colors duration-200" 
+                    fill={isFavourited ? 'currentColor' : 'none'}
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    style={{ color: isFavourited ? '#f472b6' : '#fbcfe8' }}
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
+                    />
+                  </svg>
+                </button>
                 <div className="w-16 h-px bg-linear-to-r from-transparent via-pink-400 to-transparent"></div>
               </div>
 
