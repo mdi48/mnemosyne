@@ -17,7 +17,7 @@
     "aphorisms",
     "wisdom"
   ],
-  "author": "",
+  "author": "Max Dickson",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -26,7 +26,8 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "prisma": "^6.19.0",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

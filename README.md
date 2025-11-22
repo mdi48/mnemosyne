@@ -28,3 +28,7 @@ greatest minds throughout history.
 - [ ] Production deployment and CI/CD
 
 Feel free to suggest any features you'd like to see!
+
+## 📄 License
+
+    Mnemosyne is licensed under the ISC License - see the LICENSE file for details.
