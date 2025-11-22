@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { quoteService } from '../services/quoteService';
 import { ApiResponse, PaginatedResponse, QuoteFilters, QuoteSortOptions } from '../types';
+import { validateBody } from '../middleware/validate';
+import { createQuoteSchema, updateQuoteSchema } from '../validation/schemas';
 
 const router = Router();
 
@@ -119,18 +121,9 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/quotes - Create a new quote
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', validateBody(createQuoteSchema), async (req: Request, res: Response) => {
   try {
     const { text, author, category, tags, source, isPublic } = req.body;
-
-    // Basic validation
-    if (!text || !author) {
-      const response: ApiResponse<null> = {
-        success: false,
-        error: 'Text and author are required'
-      };
-      return res.status(400).json(response);
-    }
 
     const newQuote = await quoteService.createQuote({
       text,
@@ -149,16 +142,17 @@ router.post('/', async (req: Request, res: Response) => {
 
     res.status(201).json(response);
   } catch (error) {
+    console.error('Error creating quote:', error);
     const response: ApiResponse<null> = {
       success: false,
-      error: 'Failed to create quote'
+      error: error instanceof Error ? error.message : 'Failed to create quote'
     };
     res.status(500).json(response);
   }
 });
 
 // PUT /api/quotes/:id - Update an existing quote
-router.put('/:id', async (req: Request, res: Response) => {
+router.put('/:id', validateBody(updateQuoteSchema), async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { text, author, category, tags, source, isPublic } = req.body;
@@ -188,9 +182,10 @@ router.put('/:id', async (req: Request, res: Response) => {
 
     res.json(response);
   } catch (error) {
+    console.error('Error updating quote:', error);
     const response: ApiResponse<null> = {
       success: false,
-      error: 'Failed to update quote'
+      error: error instanceof Error ? error.message : 'Failed to update quote'
     };
     res.status(500).json(response);
   }
