@@ -20,7 +20,7 @@ greatest minds throughout history.
 - [x] Quote management interface
 - [x] Quote creation and editing forms
 - [x] Database persistence + setting up a testing framework
-- [ ] Enhanced user features (favourites, sharing, export, etc.)
+- [x] Enhanced user features (favourites, sharing, export, etc.)
 - [ ] Form validation and error handling
 
 ### Later on:
