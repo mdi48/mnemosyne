@@ -21,10 +21,10 @@ greatest minds throughout history.
 - [x] Quote creation and editing forms
 - [x] Database persistence + setting up a testing framework
 - [x] Enhanced user features (favourites, sharing, export, etc.)
-- [ ] Form validation and error handling
+- [x] Form validation and error handling
+- [ ] User authentication and personal collections
 
 ### Later on:
-- [ ] User authentication and personal collections
 - [ ] Production deployment and CI/CD
 
 Feel free to suggest any features you'd like to see!
