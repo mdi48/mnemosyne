@@ -351,9 +351,12 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                 link.href = url;
                 link.download = `mnemosyne-quotes-${new Date().toISOString().split('T')[0]}.json`;
                 link.click();
-                URL.revokeObjectURL(url);
-                setSuccessMessage('Quotes exported successfully!');
-                setTimeout(() => setSuccessMessage(null), 3000);
+                // Clean up and show message after a slight delay
+                setTimeout(() => {
+                  URL.revokeObjectURL(url);
+                  setSuccessMessage('Download started - check your downloads folder');
+                  setTimeout(() => setSuccessMessage(null), 3000);
+                }, 100);
               }}
               className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur border border-white/20 transition-all duration-200 flex items-center gap-2"
               title="Export quotes as JSON"
