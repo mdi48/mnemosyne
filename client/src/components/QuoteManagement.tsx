@@ -792,6 +792,12 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                     - {quote.author}
                   </div>
                   
+                  {quote.source && (
+                    <div className="text-white/70 text-sm italic mb-3">
+                      {quote.source}
+                    </div>
+                  )}
+                  
                   {quote.category && (
                     <div className="mb-3">
                       <span className="inline-block px-3 py-1 bg-indigo-500/30 text-indigo-200 rounded-full text-xs font-medium backdrop-blur border border-indigo-400/30">
