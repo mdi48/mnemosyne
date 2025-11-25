@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { quoteService } from '../services/quoteService';
 import { ApiResponse, PaginatedResponse, QuoteFilters, QuoteSortOptions } from '../types';
 import { validateBody } from '../middleware/validate';
-import { createQuoteSchema, updateQuoteSchema } from '../validation/schemas';
+import { createQuoteSchema, updateQuoteSchema } from '../validation/quoteSchemas';
 
 const router = Router();
 
