@@ -42,3 +42,10 @@ export interface CreateQuoteRequest {
   source?: string;
   isPublic?: boolean;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  likesPrivate: boolean;
+}
