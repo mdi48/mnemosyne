@@ -11,16 +11,42 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id              String      @id @default(uuid())
+  email           String      @unique
+  password        String      // Hashed with bcrypt
+  name            String
+  likesPrivate    Boolean     @default(false) // Hide from public like lists
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  likedQuotes     QuoteLike[]
+
+  @@map("users")
+}
+
 model Quote {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   text      String
   author    String
   category  String?
-  tags      String?  // Stored as comma-separated string
+  tags      String?     // Stored as comma-separated string
   source    String?
-  isPublic  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isPublic  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  likes     QuoteLike[]
 
   @@map("quotes")
+}
+
+model QuoteLike {
+  id        String   @id @default(uuid())
+  userId    String
+  quoteId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quote     Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, quoteId]) // A user can only like a quote once
+  @@map("quote_likes")
 }
