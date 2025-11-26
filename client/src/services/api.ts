@@ -1,17 +1,93 @@
 import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest } from '../types';
 
-const API_BASE_URL = 'http://localhost:3001/api'; // To be replaced with environment variable in production
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+
+// Helper to make authenticated requests with automatic token refresh
+const makeRequest = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
+  const token = localStorage.getItem('accessToken');
+  
+  const config: RequestInit = {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+    credentials: 'include',
+  };
+
+  let response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  
+  // If we get 401 and we're not already on a refresh/auth endpoint, try to refresh
+  if (response.status === 401 && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+    try {
+      // Try to refresh the token
+      const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (refreshResponse.ok) {
+        const { data } = await refreshResponse.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        
+        // Retry the original request with new token
+        config.headers = {
+          ...config.headers,
+          Authorization: `Bearer ${data.accessToken}`,
+        };
+        response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      }
+    } catch {
+      // Refresh failed, clear token
+      localStorage.removeItem('accessToken');
+    }
+  }
+  
+  return response;
+};
+
+// Simple fetch wrapper for auth endpoints
+export const api = {
+  get: async (endpoint: string) => {
+    const response = await makeRequest(endpoint);
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw { response: { data: error, status: response.status } };
+    }
+    
+    return response.json();
+  },
+  
+  post: async (endpoint: string, data?: unknown) => {
+    const response = await makeRequest(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Request failed' }));
+      throw { response: { data: error, status: response.status } };
+    }
+    
+    return response.json();
+  },
+};
 
 class ApiClient {
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-
+    
+    const token = localStorage.getItem('accessToken');
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options?.headers,
       },
+      credentials: 'include', // Important for sending cookies
       ...options,
     };
 
@@ -19,7 +95,8 @@ class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       return await response.json();
