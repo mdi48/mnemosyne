@@ -3,9 +3,15 @@ import { apiClient } from './services/api'
 import type { Quote } from './types'
 import QuoteManagement from './components/QuoteManagement'
 import { isFavourite, toggleFavourite } from './utils/favourites'
+import { AuthProvider } from './contexts/AuthContext'
+import { useAuth } from './hooks/useAuth'
+import AuthModal from './components/AuthModal'
 
-function App() {
+function AppContent() {
+  const { user, logout, isAuthenticated } = useAuth()
   const [currentView, setCurrentView] = useState<'random' | 'management'>('random')
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login')
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -77,8 +83,43 @@ function App() {
     <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
 
-        {/* Header */}
+        {/* Header with Auth */}
         <div className="text-center mb-12">
+          <div className="flex justify-end mb-4">
+            {isAuthenticated && user ? (
+              <div className="flex items-center gap-4">
+                <span className="text-white/80">Welcome, {user.name}</span>
+                <button
+                  onClick={logout}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
+                >
+                  Log Out
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setAuthModalView('login')
+                    setAuthModalOpen(true)
+                  }}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
+                >
+                  Log In
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthModalView('register')
+                    setAuthModalOpen(true)
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Register
+                </button>
+              </div>
+            )}
+          </div>
+          
           <h1 className="text-5xl font-bold text-white mb-4 tracking-wide">
             Mnemosyne
           </h1>
@@ -87,6 +128,12 @@ function App() {
           </p>
           <div className="w-32 h-1 bg-linear-to-r from-pink-400 to-yellow-400 mx-auto mt-4 rounded-full"></div>
         </div>
+        
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialView={authModalView}
+        />
 
         {/* Main Content */}
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12">
@@ -254,6 +301,14 @@ function App() {
         </div>
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
 
