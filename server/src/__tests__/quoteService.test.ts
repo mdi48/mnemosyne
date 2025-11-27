@@ -1,24 +1,7 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { quoteService } from '../services/quoteService';
-import { PrismaClient } from '../generated/prisma/client';
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: 'file:./test.db',
-    },
-  },
-});
 
 describe('QuoteService', () => {
-  beforeEach(async () => {
-    // Clean database before each test
-    await prisma.quote.deleteMany({});
-  });
-
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
 
   describe('createQuote', () => {
     it('should create a new quote', async () => {

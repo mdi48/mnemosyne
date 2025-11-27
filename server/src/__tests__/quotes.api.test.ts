@@ -1,32 +1,16 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import cors from 'cors';
 import quotesRouter from '../routes/quotes';
-import { PrismaClient } from '../generated/prisma/client';
+import { prisma } from './setup';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/api/quotes', quotesRouter);
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: 'file:./test.db',
-    },
-  },
-});
-
 describe('Quotes API', () => {
-  beforeEach(async () => {
-    // Clean database before each test
-    await prisma.quote.deleteMany({});
-  });
-
-  afterAll(async () => {
-    await prisma.$disconnect();
-  });
 
   describe('POST /api/quotes', () => {
     it('should create a new quote', async () => {
