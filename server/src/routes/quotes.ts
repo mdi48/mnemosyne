@@ -3,14 +3,14 @@ import { quoteService } from '../services/quoteService';
 import { ApiResponse, PaginatedResponse, QuoteFilters, QuoteSortOptions } from '../types';
 import { validateBody } from '../middleware/validate';
 import { createQuoteSchema, updateQuoteSchema } from '../validation/quoteSchemas';
-import { authenticate } from '../middleware/auth';
+import { authenticate, optionalAuth } from '../middleware/auth';
 import { PrismaClient } from '../generated/prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 // GET /api/quotes - Get all quotes with filtering, sorting, and pagination
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', optionalAuth, async (req: Request, res: Response) => {
   try {
     const {
       category,
@@ -45,9 +45,40 @@ router.get('/', async (req: Request, res: Response) => {
 
     const result = await quoteService.getAllQuotes(filters, sort, pageNum, limitNum);
 
+    // Add like counts and user's like status
+    const userId = req.user?.userId;
+    const quotesWithLikes = await Promise.all(
+      result.quotes.map(async (quote) => {
+        // Get like count
+        const likeCount = await prisma.quoteLike.count({
+          where: { quoteId: quote.id }
+        });
+
+        // Check if current user liked this quote (if authenticated)
+        let isLikedByUser = false;
+        if (userId) {
+          const userLike = await prisma.quoteLike.findUnique({
+            where: {
+              userId_quoteId: {
+                userId,
+                quoteId: quote.id
+              }
+            }
+          });
+          isLikedByUser = !!userLike;
+        }
+
+        return {
+          ...quote,
+          likeCount,
+          isLikedByUser
+        };
+      })
+    );
+
     const response: PaginatedResponse<any> = {
       success: true,
-      data: result.quotes,
+      data: quotesWithLikes,
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -67,7 +98,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // GET /api/quotes/random - Get a random quote
-router.get('/random', async (req: Request, res: Response) => {
+router.get('/random', optionalAuth, async (req: Request, res: Response) => {
   try {
     const quote = await quoteService.getRandomQuote();
     
@@ -79,9 +110,32 @@ router.get('/random', async (req: Request, res: Response) => {
       return res.status(404).json(response);
     }
 
-    const response: ApiResponse<typeof quote> = {
+    // Add like count and user's like status
+    const likeCount = await prisma.quoteLike.count({
+      where: { quoteId: quote.id }
+    });
+
+    let isLikedByUser = false;
+    const userId = req.user?.userId;
+    if (userId) {
+      const userLike = await prisma.quoteLike.findUnique({
+        where: {
+          userId_quoteId: {
+            userId,
+            quoteId: quote.id
+          }
+        }
+      });
+      isLikedByUser = !!userLike;
+    }
+
+    const response: ApiResponse<typeof quote & { likeCount: number; isLikedByUser: boolean }> = {
       success: true,
-      data: quote
+      data: {
+        ...quote,
+        likeCount,
+        isLikedByUser
+      }
     };
 
     res.json(response);
@@ -95,7 +149,7 @@ router.get('/random', async (req: Request, res: Response) => {
 });
 
 // GET /api/quotes/:id - Get a specific quote by ID
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', optionalAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const quote = await quoteService.getQuoteById(id);
@@ -108,9 +162,32 @@ router.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json(response);
     }
 
-    const response: ApiResponse<typeof quote> = {
+    // Add like count and user's like status
+    const likeCount = await prisma.quoteLike.count({
+      where: { quoteId: id }
+    });
+
+    let isLikedByUser = false;
+    const userId = req.user?.userId;
+    if (userId) {
+      const userLike = await prisma.quoteLike.findUnique({
+        where: {
+          userId_quoteId: {
+            userId,
+            quoteId: id
+          }
+        }
+      });
+      isLikedByUser = !!userLike;
+    }
+
+    const response: ApiResponse<typeof quote & { likeCount: number; isLikedByUser: boolean }> = {
       success: true,
-      data: quote
+      data: {
+        ...quote,
+        likeCount,
+        isLikedByUser
+      }
     };
 
     res.json(response);
