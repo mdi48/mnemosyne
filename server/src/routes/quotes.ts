@@ -18,6 +18,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response) => {
       tags,
       search,
       isPublic,
+      likedByMe,
       sortBy = 'createdAt',
       sortOrder = 'desc',
       page = '1',
@@ -43,7 +44,20 @@ router.get('/', optionalAuth, async (req: Request, res: Response) => {
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
 
-    const result = await quoteService.getAllQuotes(filters, sort, pageNum, limitNum);
+    let result = await quoteService.getAllQuotes(filters, sort, pageNum, limitNum);
+
+    // Filter by liked quotes if requested (requires authentication)
+    if (likedByMe === 'true' && req.user?.userId) {
+      const userId = req.user.userId;
+      const likedQuoteIds = await prisma.quoteLike.findMany({
+        where: { userId },
+        select: { quoteId: true }
+      });
+      const likedIds = new Set(likedQuoteIds.map(like => like.quoteId));
+      result.quotes = result.quotes.filter(quote => likedIds.has(quote.id));
+      result.total = result.quotes.length;
+      result.totalPages = Math.ceil(result.total / limitNum);
+    }
 
     // Add like counts and user's like status
     const userId = req.user?.userId;

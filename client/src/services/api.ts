@@ -1,4 +1,4 @@
-import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest } from '../types';
+import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
@@ -179,6 +179,18 @@ class ApiClient {
 
   async getQuotesByCategory(category: string): Promise<ApiResponse<Quote[]>> {
     return this.request<ApiResponse<Quote[]>>(`/quotes/category/${encodeURIComponent(category)}`);
+  }
+
+  async likeQuote(id: string): Promise<ApiResponse<QuoteLike>> {
+    return this.request<ApiResponse<QuoteLike>>(`/quotes/${id}/like`, {
+      method: 'POST',
+    });
+  }
+
+  async unlikeQuote(id: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/quotes/${id}/like`, {
+      method: 'DELETE',
+    });
   }
 }
 

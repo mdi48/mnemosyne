@@ -12,12 +12,6 @@ export const getFavourites = (): string[] => {
   }
 };
 
-// Check if a quote is favourited
-export const isFavourite = (quoteId: string): boolean => {
-  const favourites = getFavourites();
-  return favourites.includes(quoteId);
-};
-
 // Add a quote to favourites
 export const addFavourite = (quoteId: string): void => {
   try {
@@ -39,16 +33,5 @@ export const removeFavourite = (quoteId: string): void => {
     localStorage.setItem(FAVOURITES_KEY, JSON.stringify(filtered));
   } catch (error) {
     console.error('Error removing favourite:', error);
-  }
-};
-
-// Toggle favourite status
-export const toggleFavourite = (quoteId: string): boolean => {
-  if (isFavourite(quoteId)) {
-    removeFavourite(quoteId);
-    return false;
-  } else {
-    addFavourite(quoteId);
-    return true;
   }
 };

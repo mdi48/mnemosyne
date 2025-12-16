@@ -4,9 +4,10 @@ import { useAuth } from '../hooks/useAuth';
 interface LoginProps {
   onSwitchToRegister: () => void;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function Login({ onSwitchToRegister, onClose }: LoginProps) {
+export default function Login({ onSwitchToRegister, onClose, onSuccess }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,6 +21,7 @@ export default function Login({ onSwitchToRegister, onClose }: LoginProps) {
 
     try {
       await login(email, password);
+      onSuccess?.();
       onClose();
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };

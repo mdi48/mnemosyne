@@ -8,6 +8,8 @@ export interface Quote {
   updatedAt: string;
   source?: string; // Where the quote came from (book, speech, etc.)
   isPublic?: boolean;
+  likeCount?: number;
+  isLikedByUser?: boolean;
 }
 
 export interface Category {
@@ -48,4 +50,11 @@ export interface User {
   email: string;
   name: string;
   likesPrivate: boolean;
+}
+
+export interface QuoteLike {
+  id: string;
+  userId: string;
+  quoteId: string;
+  createdAt: string;
 }
