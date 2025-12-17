@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import quotesRouter from './routes/quotes';
 import categoriesRouter from './routes/categories';
 import authRouter from './routes/auth';
+import usersRouter from './routes/users';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -42,6 +43,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRouter);
 app.use('/api/quotes', quotesRouter);
 app.use('/api/categories', categoriesRouter);
+app.use('/api/users', usersRouter);
 
 // Error handling middleware (must be last)
 app.use(notFoundHandler);

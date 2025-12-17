@@ -1,4 +1,4 @@
-import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike } from '../types';
+import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike, User } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
@@ -190,6 +190,17 @@ class ApiClient {
   async unlikeQuote(id: string): Promise<ApiResponse<null>> {
     return this.request<ApiResponse<null>>(`/quotes/${id}/like`, {
       method: 'DELETE',
+    });
+  }
+
+  async getUserProfile(): Promise<ApiResponse<User>> {
+    return this.request<ApiResponse<User>>('/users/profile');
+  }
+
+  async updateUserProfile(data: { name?: string; email?: string; likesPrivate?: boolean }): Promise<ApiResponse<User>> {
+    return this.request<ApiResponse<User>>('/users/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     });
   }
 }
