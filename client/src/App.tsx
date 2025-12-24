@@ -147,6 +147,7 @@ function AppContent() {
                 </button>
                 <button
                   onClick={async () => {
+                    clearSearch();
                     await logout();
                     // Refetch current quote to indicate that we are logged out (will affect like status)
                     if (currentQuote?.id) {
@@ -196,6 +197,7 @@ function AppContent() {
           onClose={() => setAuthModalOpen(false)}
           initialView={authModalView}
           onSuccess={() => {
+            clearSearch();
             // Refetch current quote to update like status after login/register
             if (currentQuote?.id) {
               fetchQuoteById(currentQuote.id);
