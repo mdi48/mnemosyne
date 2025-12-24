@@ -18,6 +18,9 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [searchMode, setSearchMode] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Quote[]>([])
 
   const fetchRandomQuote = useCallback(async () => {
     try {
@@ -61,6 +64,44 @@ function AppContent() {
       setIsLoading(false)
     }
   }, [fetchRandomQuote])
+
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchMode(false)
+      setSearchResults([])
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      setError(null)
+      setSearchQuery(query)
+      
+      const response = await apiClient.getQuotes({ 
+        search: query,
+        limit: 50 
+      })
+      
+      if (response.success && response.data) {
+        setSearchResults(response.data)
+        setSearchMode(true)
+      } else {
+        setError(response.error || 'Search failed')
+      }
+    } catch (err) {
+      console.error('Error searching quotes:', err)
+      setError('Failed to search quotes')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const clearSearch = () => {
+    setSearchMode(false)
+    setSearchQuery('')
+    setSearchResults([])
+    setError(null)
+  }
 
   useEffect(() => {
     // Check if there's a quote ID in the URL
@@ -167,6 +208,40 @@ function AppContent() {
           onClose={() => setProfileSettingsOpen(false)}
         />
 
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search quotes by text, author, or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearch(searchQuery)
+                }
+              }}
+              className="w-full px-6 py-4 bg-white/10 backdrop-blur-lg border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent pr-24"
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => handleSearch(searchQuery)}
+                className="px-4 py-2 bg-pink-500/80 hover:bg-pink-500 text-white rounded-lg transition-colors text-sm font-medium"
+              >
+                Search
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Main Content */}
         <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12">
           {isLoading && (
@@ -187,7 +262,75 @@ function AppContent() {
             </div>
           )}
 
-          {currentQuote && !isLoading && (
+          {/* Search Results */}
+          {searchMode && !isLoading && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-white">
+                  Search Results for "{searchQuery}"
+                </h2>
+                <span className="text-white/70">{searchResults.length} quotes found</span>
+              </div>
+
+              {searchResults.length === 0 ? (
+                <div className="text-center py-16">
+                  <svg className="w-16 h-16 text-white/30 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <p className="text-white/60 text-lg">No quotes found matching your search.</p>
+                  <button
+                    onClick={clearSearch}
+                    className="mt-4 px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              ) : (
+                <div className="grid gap-4 max-h-[500px] overflow-y-auto pr-2">
+                  {searchResults.map((quote) => (
+                    <div
+                      key={quote.id}
+                      className="bg-white/5 backdrop-blur border border-white/20 rounded-xl p-6 hover:bg-white/10 transition-all"
+                    >
+                      <blockquote className="text-lg text-white leading-relaxed mb-3 italic">
+                        "{quote.text}"
+                      </blockquote>
+                      <div className="flex items-center justify-between">
+                        <span className="text-pink-200 font-medium">- {quote.author}</span>
+                        <div className="flex items-center gap-3">
+                          {quote.category && (
+                            <span className="px-3 py-1 bg-indigo-500/30 text-indigo-200 rounded-full text-xs">
+                              {quote.category}
+                            </span>
+                          )}
+                          <LikeButton
+                            quoteId={quote.id}
+                            initialLikeCount={quote.likeCount || 0}
+                            initialIsLiked={quote.isLikedByUser || false}
+                            onAuthRequired={() => {
+                              setAuthModalView('login');
+                              setAuthModalOpen(true);
+                            }}
+                          />
+                          <button
+                            onClick={() => {
+                              setCurrentQuote(quote);
+                              clearSearch();
+                            }}
+                            className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentQuote && !isLoading && !searchMode && (
             <div className="text-center">
               <blockquote className="text-2xl md:text-3xl font-light text-white leading-relaxed mb-8 italic">
                 "{currentQuote.text}"
@@ -236,9 +379,13 @@ function AppContent() {
           )}
 
           {/* Action Buttons */}
-          <div className="text-center space-y-4">
+          {!searchMode && (
+            <div className="text-center space-y-4">
             <button 
-              onClick={fetchRandomQuote}
+              onClick={() => {
+                clearSearch();
+                fetchRandomQuote();
+              }}
               disabled={isLoading}
               className="group relative px-8 py-4 bg-linear-to-r from-pink-500 to-violet-500 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
@@ -303,6 +450,7 @@ function AppContent() {
               </button>
             </div>
           </div>
+          )}
         </div>
 
         {/* Status Footer */}
