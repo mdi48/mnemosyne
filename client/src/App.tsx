@@ -21,6 +21,7 @@ function AppContent() {
   const [searchMode, setSearchMode] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Quote[]>([])
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false)
 
   const fetchRandomQuote = useCallback(async () => {
     try {
@@ -114,6 +115,98 @@ function AppContent() {
       fetchRandomQuote()
     }
   }, [fetchRandomQuote, fetchQuoteById])
+
+
+  // ============================================================================
+  // ||                               Shortcuts                                ||
+  // ============================================================================
+
+  // Keyboard shortcuts. Change based on user feedback. Maybe let users customize later?
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in input fields
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        // Allow Esc to blur input fields
+        if (e.key === 'Escape') {
+          target.blur()
+        }
+        return
+      }
+
+      // Ignore shortcuts when modals are open (except ? to show help and Esc to close help)
+      if (authModalOpen || profileSettingsOpen) {
+        return
+      }
+
+      // Special handling for help modal
+      if (showShortcutsHelp) {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          setShowShortcutsHelp(false)
+        }
+        return
+      }
+
+      switch (e.key) {
+        case ' ': // Space - New random quote
+          e.preventDefault()
+          if (!searchMode) {
+            clearSearch()
+            fetchRandomQuote()
+          }
+          break
+
+        case '/': { // Slash - Focus search (Wrapped in braces to avoid eslint error)
+          e.preventDefault()
+          const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement
+          if (searchInput) {
+            searchInput.focus()
+          }
+          break
+        }
+
+        case 'c':
+        case 'C': // C - Copy current quote
+          if (currentQuote && !searchMode) {
+            const text = `"${currentQuote.text}" - ${currentQuote.author}`
+            navigator.clipboard.writeText(text)
+            setSuccessMessage('Quote copied to clipboard!')
+            setTimeout(() => setSuccessMessage(null), 2000)
+          }
+          break
+
+        case 'Escape': // Escape - Clear search
+          if (searchMode) {
+            clearSearch()
+          }
+          break
+
+        case 's':
+        case 'S': // S - Share link
+          if (currentQuote && !searchMode) {
+            const url = `${window.location.origin}?quote=${currentQuote.id}`
+            navigator.clipboard.writeText(url)
+            setSuccessMessage('Link copied to clipboard!')
+            setTimeout(() => setSuccessMessage(null), 2000)
+          }
+          break
+
+        case 'l':
+        case 'L': // L - Go to library
+          setCurrentView('management')
+          break
+
+        case '?': // ? - Show keyboard shortcuts help
+          e.preventDefault()
+          setShowShortcutsHelp(true)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [currentQuote, searchMode, authModalOpen, profileSettingsOpen, showShortcutsHelp, fetchRandomQuote, clearSearch])
 
   if (currentView === 'management') {
     return <QuoteManagement onBackToRandom={() => {
@@ -457,15 +550,81 @@ function AppContent() {
 
         {/* Status Footer */}
         <div className="text-center mt-8">
-          <div className="flex items-center justify-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${
-              error ? 'bg-red-400' : currentQuote ? 'bg-green-400' : 'bg-yellow-400'
-            }`}></div>
-            <span className="text-white/70 text-sm">
-              API Status: {error ? 'Disconnected' : currentQuote ? 'Connected' : 'Loading...'}
-            </span>
+          <div className="flex items-center justify-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className={`w-2 h-2 rounded-full ${
+                error ? 'bg-red-400' : currentQuote ? 'bg-green-400' : 'bg-yellow-400'
+              }`}></div>
+              <span className="text-white/70 text-sm">
+                API Status: {error ? 'Disconnected' : currentQuote ? 'Connected' : 'Loading...'}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowShortcutsHelp(true)}
+              className="text-white/50 hover:text-white/90 text-sm flex items-center gap-1 transition-colors"
+              title="Keyboard shortcuts"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Shortcuts
+            </button>
           </div>
         </div>
+
+        {/* Keyboard Shortcuts Help Modal */}
+        {showShortcutsHelp && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+            <div className="bg-linear-to-br from-purple-900 to-indigo-900 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 border border-white/20">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-white">Keyboard Shortcuts</h2>
+                <button
+                  onClick={() => setShowShortcutsHelp(false)}
+                  className="text-white/70 hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>Get new quote</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">Space</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>Focus search</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">/</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>Copy quote</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">C</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>Share link</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">S</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>View library</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">L</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>Clear search</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">Escape</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>Show this help</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">?</kbd>
+                </div>
+              </div>
+              <div className="mt-6 pt-6 border-t border-white/20">
+                <p className="text-white/60 text-sm text-center">
+                  Press <kbd className="px-2 py-0.5 bg-white/10 rounded text-xs border border-white/30">Esc</kbd> to close this dialog
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

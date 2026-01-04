@@ -112,6 +112,37 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
 
   }, [filters, fetchQuotes])
 
+  // Keyboard shortcuts for quote library (since they might be different from random quote view)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in input fields
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        // Allow Esc to blur input fields
+        if (e.key === 'Escape') {
+          target.blur()
+        }
+        return
+      }
+
+      // Ignore shortcuts when modals are open
+      if (showAddForm || editingQuote || deleteConfirm || showAuthModal) {
+        return
+      }
+
+      switch (e.key) {
+        case 'Escape': // Esc - Clear search and filters
+          if (filters.search || filters.author || filters.category || filters.likedByMe) {
+            clearFilters()
+          }
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [filters, showAddForm, editingQuote, deleteConfirm, showAuthModal])
+
   const handleFilterChange = (key: keyof Filters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }
