@@ -887,7 +887,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                     const halfVisible = Math.floor(maxVisible / 2);
                     
                     let startPage = Math.max(1, pagination.page - halfVisible);
-                    let endPage = Math.min(pagination.totalPages, startPage + maxVisible - 1); // Highlights as an error as it's never reassigned, but I am leaving it mutable for any future changes and for consistency
+                    const endPage = Math.min(pagination.totalPages, startPage + maxVisible - 1);
                     
                     // Adjust start if we're near the end
                     if (endPage - startPage < maxVisible - 1) {
