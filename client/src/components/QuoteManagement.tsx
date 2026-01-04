@@ -852,35 +852,131 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
             
             {/* Pagination Controls */}
             {pagination.totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 mb-16">
-                <button
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
-                >
-                  Previous
-                </button>
-
-                {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(pageNum => (
+              <div className="mb-16 space-y-4">
+                {/* Page Info */}
+                <div className="text-center text-white/70 text-sm">
+                  Page {pagination.page} of {pagination.totalPages}
+                </div>
+                
+                <div className="flex justify-center items-center gap-2 flex-wrap">
+                  {/* First Page */}
                   <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      pagination.page === pageNum
-                        ? 'bg-white/20 text-white'
-                        : 'bg-white/10 hover:bg-white/20 text-white/70'
-                    }`}
+                    onClick={() => handlePageChange(1)}
+                    disabled={pagination.page === 1}
+                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                    title="First page"
                   >
-                    {pageNum}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
                   </button>
-                ))}
-                <button
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page === pagination.totalPages}
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
-                >
-                  Next
-                </button>
+
+                  {/* Previous Page */}
+                  <button
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                    disabled={pagination.page === 1}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  {(() => {
+                    const pages = [];
+                    const maxVisible = 5;
+                    const halfVisible = Math.floor(maxVisible / 2);
+                    
+                    let startPage = Math.max(1, pagination.page - halfVisible);
+                    let endPage = Math.min(pagination.totalPages, startPage + maxVisible - 1); // Highlights as an error as it's never reassigned, but I am leaving it mutable for any future changes and for consistency
+                    
+                    // Adjust start if we're near the end
+                    if (endPage - startPage < maxVisible - 1) {
+                      startPage = Math.max(1, endPage - maxVisible + 1);
+                    }
+
+                    // Show first page + ellipsis if needed
+                    if (startPage > 1) {
+                      pages.push(
+                        <button
+                          key={1}
+                          onClick={() => handlePageChange(1)}
+                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white/70 rounded-lg transition-colors"
+                        >
+                          1
+                        </button>
+                      );
+                      if (startPage > 2) {
+                        pages.push(
+                          <span key="ellipsis-start" className="px-2 text-white/50">
+                            ...
+                          </span>
+                        );
+                      }
+                    }
+
+                    // Show page range
+                    const loopStart = startPage > 1 ? Math.max(startPage, 2) : startPage;
+                    const loopEnd = endPage < pagination.totalPages ? Math.min(endPage, pagination.totalPages - 1) : endPage;
+                    for (let i = loopStart; i <= loopEnd; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => handlePageChange(i)}
+                          className={`px-4 py-2 rounded-lg transition-colors ${
+                            pagination.page === i
+                              ? 'bg-pink-500/80 text-white font-semibold border border-pink-400'
+                              : 'bg-white/10 hover:bg-white/20 text-white/70'
+                          }`}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+
+                    // Show ellipsis + last page if needed
+                    if (endPage < pagination.totalPages) {
+                      if (endPage < pagination.totalPages - 1) {
+                        pages.push(
+                          <span key="ellipsis-end" className="px-2 text-white/50">
+                            ...
+                          </span>
+                        );
+                      }
+                      pages.push(
+                        <button
+                          key={pagination.totalPages}
+                          onClick={() => handlePageChange(pagination.totalPages)}
+                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white/70 rounded-lg transition-colors"
+                        >
+                          {pagination.totalPages}
+                        </button>
+                      );
+                    }
+
+                    return pages;
+                  })()}
+
+                  {/* Next Page */}
+                  <button
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                    disabled={pagination.page === pagination.totalPages}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                  >
+                    Next
+                  </button>
+
+                  {/* Last Page */}
+                  <button
+                    onClick={() => handlePageChange(pagination.totalPages)}
+                    disabled={pagination.page === pagination.totalPages}
+                    className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-white/20"
+                    title="Last page"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             )}
           </>
