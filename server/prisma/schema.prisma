@@ -21,6 +21,7 @@ model User {
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   likedQuotes     QuoteLike[]
+  collections     Collection[]
 
   @@map("users")
 }
@@ -36,6 +37,7 @@ model Quote {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   likes     QuoteLike[]
+  collectionQuotes CollectionQuote[]
 
   @@map("quotes")
 }
@@ -50,4 +52,29 @@ model QuoteLike {
 
   @@unique([userId, quoteId]) // A user can only like a quote once
   @@map("quote_likes")
+}
+
+model Collection {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quotes      CollectionQuote[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("collections")
+}
+
+model CollectionQuote {
+  id           String     @id @default(uuid())
+  collectionId String
+  quoteId      String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  quote        Quote      @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  addedAt      DateTime   @default(now())
+
+  @@unique([collectionId, quoteId]) // A quote can only be in a collection once
+  @@map("collection_quotes")
 }
