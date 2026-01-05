@@ -53,6 +53,9 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   const [authors, setAuthors] = useState<string[]>([])
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login')
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'txt'>('json')
+  const [isExporting, setIsExporting] = useState(false)
 
   const fetchQuotes = useCallback(async (page = 1) => {
     try {
@@ -297,6 +300,102 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
     setFormError(null)
   }
 
+  const handleExport = async () => {
+    try {
+      setIsExporting(true)
+      
+      // Fetch all quotes with current filters
+      const params = {
+        limit: 10000, // Get all quotes
+        ...(filters.search && { search: filters.search }),
+        ...(filters.author && { author: filters.author }),
+        ...(filters.category && { category: filters.category }),
+        ...(filters.likedByMe && { likedByMe: 'true' }),
+        sortBy: filters.sortBy,
+        sortOrder: filters.sortOrder
+      }
+
+      const response = await apiClient.getQuotes(params)
+      
+      if (!response.success || !response.data) {
+        throw new Error('Failed to fetch quotes for export')
+      }
+
+      const quotesToExport = response.data
+      let content: string
+      let mimeType: string
+      let fileExtension: string
+
+      switch (exportFormat) {
+        case 'json':
+          content = JSON.stringify(quotesToExport, null, 2)
+          mimeType = 'application/json'
+          fileExtension = 'json'
+          break
+
+        case 'csv': {
+          // CSV format with headers
+          const headers = ['Text', 'Author', 'Category', 'Tags', 'Source', 'Created At']
+          const rows = quotesToExport.map(q => [
+            `"${q.text.replace(/"/g, '""')}"`, // Escape quotes
+            `"${q.author.replace(/"/g, '""')}"`,
+            q.category ? `"${q.category.replace(/"/g, '""')}"` : '',
+            q.tags?.length ? `"${q.tags.join(', ')}"` : '',
+            q.source ? `"${q.source.replace(/"/g, '""')}"` : '',
+            new Date(q.createdAt).toISOString()
+          ])
+          content = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+          mimeType = 'text/csv'
+          fileExtension = 'csv'
+          break
+        }
+
+        case 'txt': {
+          // Plain text format
+          content = quotesToExport.map(q => {
+            const parts = [
+              `"${q.text}"`,
+              `— ${q.author}`,
+              q.category ? `Category: ${q.category}` : '',
+              q.tags?.length ? `Tags: ${q.tags.join(', ')}` : '',
+              q.source ? `Source: ${q.source}` : '',
+              ''
+            ].filter(Boolean)
+            return parts.join('\n')
+          }).join('\n---\n\n')
+          mimeType = 'text/plain'
+          fileExtension = 'txt'
+          break
+        }
+
+        default:
+          throw new Error('Invalid export format')
+      }
+
+      // Create and download file
+      const blob = new Blob([content], { type: mimeType })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `mnemosyne-quotes-${new Date().toISOString().split('T')[0]}.${fileExtension}`
+      link.click()
+      
+      setTimeout(() => {
+        URL.revokeObjectURL(url)
+        setSuccessMessage(`Exported ${quotesToExport.length} quote${quotesToExport.length !== 1 ? 's' : ''} as ${exportFormat.toUpperCase()}`)
+        setTimeout(() => setSuccessMessage(null), 3000)
+      }, 100)
+
+      setShowExportModal(false)
+    } catch (err) {
+      console.error('Error exporting quotes:', err)
+      setSuccessMessage('Export failed - please try again')
+      setTimeout(() => setSuccessMessage(null), 3000)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 p-4">
       <div className="max-w-7xl mx-auto">
@@ -321,25 +420,9 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => {
-                // Export all quotes data
-                const exportData = quotes;
-                const dataStr = JSON.stringify(exportData, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `mnemosyne-quotes-${new Date().toISOString().split('T')[0]}.json`;
-                link.click();
-                // Clean up and show message after a slight delay
-                setTimeout(() => {
-                  URL.revokeObjectURL(url);
-                  setSuccessMessage('Download started - check your downloads folder');
-                  setTimeout(() => setSuccessMessage(null), 3000);
-                }, 100);
-              }}
+              onClick={() => setShowExportModal(true)}
               className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur border border-white/20 transition-all duration-200 flex items-center gap-2"
-              title="Export quotes as JSON"
+              title="Export quotes"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1020,6 +1103,143 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
         onClose={() => setShowAuthModal(false)}
         initialView={authModalView}
       />
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-linear-to-br from-purple-900 to-indigo-900 rounded-2xl shadow-2xl p-8 max-w-md w-full border border-white/20">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">Export Quotes</h2>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="text-white/70 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Info */}
+              <div className="bg-blue-500/20 border border-blue-400/50 rounded-lg p-4">
+                <p className="text-blue-200 text-sm">
+                  {filters.search || filters.author || filters.category || filters.likedByMe
+                    ? 'Export will include all quotes matching your current filters.'
+                    : 'Export will include all quotes in your library.'}
+                </p>
+              </div>
+
+              {/* Format Selection */}
+              <div>
+                <label className="block text-white text-sm font-medium mb-3">Export Format</label>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setExportFormat('json')}
+                    className={`w-full p-4 rounded-lg border-2 transition-all ${
+                      exportFormat === 'json'
+                        ? 'border-pink-400 bg-pink-500/20'
+                        : 'border-white/20 bg-white/5 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        exportFormat === 'json' ? 'border-pink-400' : 'border-white/40'
+                      }`}>
+                        {exportFormat === 'json' && (
+                          <div className="w-3 h-3 rounded-full bg-pink-400"></div>
+                        )}
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className="text-white font-medium">JSON</div>
+                        <div className="text-white/60 text-sm">Structured data with all fields</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setExportFormat('csv')}
+                    className={`w-full p-4 rounded-lg border-2 transition-all ${
+                      exportFormat === 'csv'
+                        ? 'border-pink-400 bg-pink-500/20'
+                        : 'border-white/20 bg-white/5 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        exportFormat === 'csv' ? 'border-pink-400' : 'border-white/40'
+                      }`}>
+                        {exportFormat === 'csv' && (
+                          <div className="w-3 h-3 rounded-full bg-pink-400"></div>
+                        )}
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className="text-white font-medium">CSV</div>
+                        <div className="text-white/60 text-sm">Spreadsheet-compatible format</div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setExportFormat('txt')}
+                    className={`w-full p-4 rounded-lg border-2 transition-all ${
+                      exportFormat === 'txt'
+                        ? 'border-pink-400 bg-pink-500/20'
+                        : 'border-white/20 bg-white/5 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        exportFormat === 'txt' ? 'border-pink-400' : 'border-white/40'
+                      }`}>
+                        {exportFormat === 'txt' && (
+                          <div className="w-3 h-3 rounded-full bg-pink-400"></div>
+                        )}
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className="text-white font-medium">Plain Text</div>
+                        <div className="text-white/60 text-sm">Human-readable format</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="flex-1 px-6 py-3 bg-linear-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isExporting ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      Export
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
