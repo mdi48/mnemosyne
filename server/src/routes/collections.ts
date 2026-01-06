@@ -38,6 +38,39 @@ router.get('/', authenticate, async (req, res) => {
   }
 })
 
+// Get quotes in a specific collection
+router.get('/:id/quotes', authenticate, async (req, res) => {
+  try {
+    const userId = req.user!.userId
+    const { id } = req.params
+
+    // Verify the collection belongs to the user
+    const collection = await prisma.collection.findFirst({
+      where: { id, userId }
+    })
+
+    if (!collection) {
+      return res.status(404).json({ success: false, error: 'Collection not found' })
+    }
+
+    // Get all quotes in the collection
+    const collectionQuotes = await prisma.collectionQuote.findMany({
+      where: { collectionId: id },
+      include: {
+        quote: true
+      },
+      orderBy: { addedAt: 'desc' }
+    })
+
+    const quotes = collectionQuotes.map(cq => cq.quote)
+
+    res.json({ success: true, data: quotes })
+  } catch (error) {
+    console.error('Error fetching collection quotes:', error)
+    res.status(500).json({ success: false, error: 'Failed to fetch collection quotes' })
+  }
+})
+
 // Create a new collection
 router.post('/', authenticate, async (req, res) => {
   try {

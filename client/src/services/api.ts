@@ -209,6 +209,10 @@ class ApiClient {
     return this.request<ApiResponse<Collection[]>>('/collections');
   }
 
+  async getCollectionQuotes(collectionId: string): Promise<ApiResponse<Quote[]>> {
+    return this.request<ApiResponse<Quote[]>>(`/collections/${collectionId}/quotes`);
+  }
+
   async createCollection(data: { name: string; description?: string }): Promise<ApiResponse<Collection>> {
     return this.request<ApiResponse<Collection>>('/collections', {
       method: 'POST',
