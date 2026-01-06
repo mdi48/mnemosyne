@@ -1,4 +1,4 @@
-import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike, User } from '../types';
+import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike, User, Collection, CollectionQuote } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
@@ -201,6 +201,44 @@ class ApiClient {
     return this.request<ApiResponse<User>>('/users/profile', {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  }
+
+  // Collections
+  async getCollections(): Promise<ApiResponse<Collection[]>> {
+    return this.request<ApiResponse<Collection[]>>('/collections');
+  }
+
+  async createCollection(data: { name: string; description?: string }): Promise<ApiResponse<Collection>> {
+    return this.request<ApiResponse<Collection>>('/collections', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateCollection(id: string, data: { name?: string; description?: string }): Promise<ApiResponse<Collection>> {
+    return this.request<ApiResponse<Collection>>(`/collections/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteCollection(id: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/collections/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async addQuoteToCollection(collectionId: string, quoteId: string): Promise<ApiResponse<CollectionQuote>> {
+    return this.request<ApiResponse<CollectionQuote>>(`/collections/${collectionId}/quotes`, {
+      method: 'POST',
+      body: JSON.stringify({ quoteId }),
+    });
+  }
+
+  async removeQuoteFromCollection(collectionId: string, quoteId: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/collections/${collectionId}/quotes/${quoteId}`, {
+      method: 'DELETE',
     });
   }
 }
