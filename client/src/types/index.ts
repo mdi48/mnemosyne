@@ -58,3 +58,20 @@ export interface QuoteLike {
   quoteId: string;
   createdAt: string;
 }
+
+export interface Collection {
+  id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+  quoteCount?: number;
+}
+
+export interface CollectionQuote {
+  id: string;
+  collectionId: string;
+  quoteId: string;
+  addedAt: string;
+}
