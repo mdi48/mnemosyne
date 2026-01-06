@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiClient } from '../services/api'
 import type { Quote } from '../types'
 import { LikeButton } from './LikeButton'
+import { AddToCollectionButton } from './AddToCollectionButton'
+import { CollectionsManager } from './CollectionsManager'
 import AuthModal from './AuthModal'
 
 interface QuoteManagementProps {
@@ -56,6 +58,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
   const [showExportModal, setShowExportModal] = useState(false)
   const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'txt'>('json')
   const [isExporting, setIsExporting] = useState(false)
+  const [showCollectionsManager, setShowCollectionsManager] = useState(false)
 
   const fetchQuotes = useCallback(async (page = 1) => {
     try {
@@ -419,6 +422,16 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
             <p className="text-indigo-200">Explore and manage your collection</p>
           </div>
           <div className="flex gap-3">
+            <button
+              onClick={() => setShowCollectionsManager(true)}
+              className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur border border-white/20 transition-all duration-200 flex items-center gap-2"
+              title="Manage Collections"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              Collections
+            </button>
             <button
               onClick={() => setShowExportModal(true)}
               className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur border border-white/20 transition-all duration-200 flex items-center gap-2"
@@ -926,6 +939,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                           setShowAuthModal(true);
                         }}
                       />
+                      <AddToCollectionButton quoteId={quote.id} />
                       <button
                         onClick={() => {
                           const text = `"${quote.text}" - ${quote.author}`;
@@ -1239,6 +1253,13 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
             </div>
           </div>
         </div>
+      )}
+
+      {/* Collections Manager Modal */}
+      {showCollectionsManager && (
+        <CollectionsManager
+          onClose={() => setShowCollectionsManager(false)}
+        />
       )}
     </div>
   )
