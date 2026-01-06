@@ -13,11 +13,6 @@ router.get('/', authenticate, async (req, res) => {
     const collections = await prisma.collection.findMany({
       where: { userId },
       include: {
-        quotes: {
-          include: {
-            quote: true
-          }
-        },
         _count: {
           select: { quotes: true }
         }
@@ -25,7 +20,18 @@ router.get('/', authenticate, async (req, res) => {
       orderBy: { createdAt: 'desc' }
     })
 
-    res.json({ success: true, data: collections })
+    // Map the data to include quoteCount
+    const collectionsWithCount = collections.map(collection => ({
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      userId: collection.userId,
+      createdAt: collection.createdAt,
+      updatedAt: collection.updatedAt,
+      quoteCount: collection._count.quotes
+    }))
+
+    res.json({ success: true, data: collectionsWithCount })
   } catch (error) {
     console.error('Error fetching collections:', error)
     res.status(500).json({ success: false, error: 'Failed to fetch collections' })
