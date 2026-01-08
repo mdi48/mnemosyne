@@ -5,6 +5,7 @@ import { LikeButton } from './LikeButton'
 import { AddToCollectionButton } from './AddToCollectionButton'
 import { CollectionsManager } from './CollectionsManager'
 import { ShareButton } from './ShareButton'
+import { QuoteImageGenerator } from './QuoteImageGenerator'
 import AuthModal from './AuthModal'
 
 interface QuoteManagementProps {
@@ -942,6 +943,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                       />
                       <AddToCollectionButton quoteId={quote.id} />
                       <ShareButton quote={quote} />
+                      <QuoteImageGenerator quote={quote} />
                       <button
                         onClick={() => {
                           const text = `"${quote.text}" - ${quote.author}`;

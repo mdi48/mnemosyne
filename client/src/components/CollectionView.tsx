@@ -3,6 +3,7 @@ import { apiClient } from '../services/api';
 import type { Quote, Collection } from '../types';
 import { LikeButton } from './LikeButton';
 import { ShareButton } from './ShareButton';
+import { QuoteImageGenerator } from './QuoteImageGenerator';
 
 interface CollectionViewProps {
   collection: Collection;
@@ -159,6 +160,7 @@ export function CollectionView({ collection, onClose, onAuthRequired }: Collecti
                         onAuthRequired={onAuthRequired || (() => {})}
                       />
                       <ShareButton quote={quote} />
+                      <QuoteImageGenerator quote={quote} />
                       <button
                         onClick={() => {
                           const text = `"${quote.text}" - ${quote.author}`;
