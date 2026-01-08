@@ -4,6 +4,7 @@ import type { Quote } from '../types'
 import { LikeButton } from './LikeButton'
 import { AddToCollectionButton } from './AddToCollectionButton'
 import { CollectionsManager } from './CollectionsManager'
+import { ShareButton } from './ShareButton'
 import AuthModal from './AuthModal'
 
 interface QuoteManagementProps {
@@ -925,11 +926,11 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-                    <div className="text-white/50 text-xs">
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="text-white/50 text-xs mb-3">
                       Added {new Date(quote.createdAt).toLocaleDateString()}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <LikeButton
                         quoteId={quote.id}
                         initialLikeCount={quote.likeCount || 0}
@@ -940,6 +941,7 @@ export default function QuoteManagement({ onBackToRandom }: QuoteManagementProps
                         }}
                       />
                       <AddToCollectionButton quoteId={quote.id} />
+                      <ShareButton quote={quote} />
                       <button
                         onClick={() => {
                           const text = `"${quote.text}" - ${quote.author}`;

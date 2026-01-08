@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '../services/api';
 import type { Quote, Collection } from '../types';
 import { LikeButton } from './LikeButton';
+import { ShareButton } from './ShareButton';
 
 interface CollectionViewProps {
   collection: Collection;
@@ -149,14 +150,15 @@ export function CollectionView({ collection, onClose, onAuthRequired }: Collecti
                     </div>
                   )}
                   
-                  <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                    <div className="flex gap-2">
+                  <div className="pt-3 border-t border-white/10">
+                    <div className="flex flex-wrap gap-2">
                       <LikeButton
                         quoteId={quote.id}
                         initialLikeCount={quote.likeCount || 0}
                         initialIsLiked={quote.isLikedByUser || false}
                         onAuthRequired={onAuthRequired || (() => {})}
                       />
+                      <ShareButton quote={quote} />
                       <button
                         onClick={() => {
                           const text = `"${quote.text}" - ${quote.author}`;
@@ -171,16 +173,16 @@ export function CollectionView({ collection, onClose, onAuthRequired }: Collecti
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                       </button>
+                      <button
+                        onClick={() => handleRemoveQuote(quote.id)}
+                        className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
+                        title="Remove from collection"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleRemoveQuote(quote.id)}
-                      className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors"
-                      title="Remove from collection"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
                   </div>
                 </div>
               ))}
