@@ -64,7 +64,34 @@ router.get('/:id/quotes', authenticate, async (req, res) => {
 
     const quotes = collectionQuotes.map(cq => cq.quote)
 
-    res.json({ success: true, data: quotes })
+    // Add like counts and user's like status (same as quotes endpoint)
+    const quotesWithLikes = await Promise.all(
+      quotes.map(async (quote) => {
+        // Get like count
+        const likeCount = await prisma.quoteLike.count({
+          where: { quoteId: quote.id }
+        });
+
+        // Check if current user liked this quote
+        const userLike = await prisma.quoteLike.findUnique({
+          where: {
+            userId_quoteId: {
+              userId,
+              quoteId: quote.id
+            }
+          }
+        });
+        const isLikedByUser = !!userLike;
+
+        return {
+          ...quote,
+          likeCount,
+          isLikedByUser
+        };
+      })
+    );
+
+    res.json({ success: true, data: quotesWithLikes })
   } catch (error) {
     console.error('Error fetching collection quotes:', error)
     res.status(500).json({ success: false, error: 'Failed to fetch collection quotes' })
