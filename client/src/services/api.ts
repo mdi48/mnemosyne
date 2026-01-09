@@ -1,4 +1,4 @@
-import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike, User, Collection, CollectionQuote } from '../types';
+import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike, User, Collection, CollectionQuote, Activity } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
@@ -244,6 +244,39 @@ class ApiClient {
     return this.request<ApiResponse<null>>(`/collections/${collectionId}/quotes/${quoteId}`, {
       method: 'DELETE',
     });
+  }
+
+  // User social features
+  async getUsers(params?: { page?: number; limit?: number; search?: string }): Promise<PaginatedResponse<User>> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    
+    const query = queryParams.toString();
+    return this.request<PaginatedResponse<User>>(`/users${query ? `?${query}` : ''}`);
+  }
+
+  async getUserById(id: string): Promise<ApiResponse<User>> {
+    return this.request<ApiResponse<User>>(`/users/${id}`);
+  }
+
+  async getUserLikes(id: string, params?: { page?: number; limit?: number }): Promise<PaginatedResponse<Quote>> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    
+    const query = queryParams.toString();
+    return this.request<PaginatedResponse<Quote>>(`/users/${id}/likes${query ? `?${query}` : ''}`);
+  }
+
+  async getUserCollections(id: string): Promise<ApiResponse<Collection[]>> {
+    return this.request<ApiResponse<Collection[]>>(`/users/${id}/collections`);
+  }
+
+  async getUserActivity(id: string, limit?: number): Promise<ApiResponse<Activity[]>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request<ApiResponse<Activity[]>>(`/users/${id}/activity${query}`);
   }
 }
 
