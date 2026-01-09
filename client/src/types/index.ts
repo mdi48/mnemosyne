@@ -50,6 +50,9 @@ export interface User {
   email: string;
   name: string;
   likesPrivate: boolean;
+  createdAt?: string;
+  likeCount?: number;
+  collectionCount?: number;
 }
 
 export interface QuoteLike {
@@ -74,4 +77,18 @@ export interface CollectionQuote {
   collectionId: string;
   quoteId: string;
   addedAt: string;
+}
+
+export interface Activity {
+  type: 'like' | 'collectionUpdate';
+  timestamp: string;
+  quote?: {
+    id: string;
+    text: string;
+    author: string;
+  };
+  collection?: {
+    id: string;
+    name: string;
+  };
 }

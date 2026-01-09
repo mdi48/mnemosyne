@@ -399,7 +399,7 @@ router.get('/:id/activity', optionalAuth, async (req: Request, res: Response) =>
     });
 
     activity.push(...collections.map(col => ({
-      type: 'collection_update',
+      type: 'collectionUpdate',
       timestamp: col.updatedAt,
       collection: { id: col.id, name: col.name }
     })));
