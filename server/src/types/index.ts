@@ -65,3 +65,22 @@ export interface QuoteSortOptions {
   field: 'createdAt' | 'updatedAt' | 'author' | 'text';
   order: 'asc' | 'desc';
 }
+
+export interface UserStats {
+  userId: string;
+  userName: string;
+  stats: {
+    likesGiven: number;
+    likesReceived: number;
+    collectionsCount: number;
+    quotesAdded: number;
+  };
+  collections?: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    quotesCount: number;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
+}
