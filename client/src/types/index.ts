@@ -92,3 +92,22 @@ export interface Activity {
     name: string;
   };
 }
+
+export interface UserStats {
+  userId: string;
+  userName: string;
+  stats: {
+    likesGiven: number;
+    likesReceived: number;
+    collectionsCount: number;
+    quotesAdded: number;
+  };
+  collections?: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    quotesCount: number;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+}
