@@ -1,6 +1,7 @@
 import express from 'express'
 import { PrismaClient } from '../generated/prisma/client'
 import { authenticate } from '../middleware/auth'
+import { createActivity } from '../services/activityService'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -116,6 +117,13 @@ router.post('/', authenticate, async (req, res) => {
       }
     })
 
+    // Track activity
+    await createActivity({
+      userId,
+      activityType: 'collectionCreate',
+      collectionId: collection.id
+    })
+
     res.json({ success: true, data: collection })
   } catch (error) {
     console.error('Error creating collection:', error)
@@ -145,6 +153,13 @@ router.patch('/:id', authenticate, async (req, res) => {
         ...(name && { name: name.trim() }),
         ...(description !== undefined && { description: description?.trim() || null })
       }
+    })
+
+    // Track activity
+    await createActivity({
+      userId,
+      activityType: 'collectionUpdate',
+      collectionId: id
     })
 
     res.json({ success: true, data: updated })
@@ -215,6 +230,14 @@ router.post('/:id/quotes', authenticate, async (req, res) => {
         collectionId: id,
         quoteId
       }
+    })
+
+    // Track activity
+    await createActivity({
+      userId,
+      activityType: 'collectionUpdate',
+      collectionId: id,
+      quoteId
     })
 
     res.json({ success: true, data: collectionQuote })

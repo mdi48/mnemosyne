@@ -5,6 +5,7 @@ import { validateBody } from '../middleware/validate';
 import { createQuoteSchema, updateQuoteSchema } from '../validation/quoteSchemas';
 import { authenticate, optionalAuth } from '../middleware/auth';
 import { PrismaClient } from '../generated/prisma/client';
+import { createActivity } from '../services/activityService';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -396,6 +397,13 @@ router.post('/:id/like', authenticate, async (req: Request, res: Response) => {
         userId,
         quoteId: id
       }
+    });
+
+    // Track activity
+    await createActivity({
+      userId,
+      activityType: 'like',
+      quoteId: id
     });
 
     const response: ApiResponse<typeof like> = {

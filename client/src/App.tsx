@@ -7,11 +7,12 @@ import { useAuth } from './hooks/useAuth'
 import AuthModal from './components/AuthModal'
 import ProfileSettings from './components/ProfileSettings'
 import  ProfilePage  from './components/ProfilePage'
+import ActivityFeed from './components/ActivityFeed'
 import { LikeButton } from './components/LikeButton'
 
 function AppContent() {
   const { user, logout, isAuthenticated } = useAuth()
-  const [currentView, setCurrentView] = useState<'random' | 'management' | 'profile'>('random')
+  const [currentView, setCurrentView] = useState<'random' | 'management' | 'profile' | 'activity'>('random')
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login')
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false)
@@ -204,6 +205,13 @@ function AppContent() {
             setCurrentView('profile')
           }
           break
+
+        case 'a':
+        case 'A': // A - Go to activity feed (only if authenticated)
+          if (isAuthenticated) {
+            setCurrentView('activity')
+          }
+          break
   
         case '?': // ? - Show keyboard shortcuts help
           e.preventDefault()
@@ -244,6 +252,28 @@ function AppContent() {
     );
   }
 
+  if (currentView === 'activity') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="bg-white shadow-sm border-b mb-6">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <button
+              onClick={() => setCurrentView('random')}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+            >
+              ← Back to Quotes
+            </button>
+            <h1 className="text-2xl font-bold text-gray-800">Activity Feed</h1>
+            <div className="w-32"></div> {/* Spacer for center alignment */}
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4">
+          <ActivityFeed />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
       <div className="max-w-4xl w-full">
@@ -254,6 +284,15 @@ function AppContent() {
             {isAuthenticated && user ? (
               <div className="flex items-center gap-4">
                 <span className="text-white/80">Welcome, {user.name}</span>
+                <button
+                  onClick={() => setCurrentView('activity')}
+                  className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
+                  title="Activity Feed"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                  </svg>
+                </button>
                 <button
                   onClick={() => setCurrentView('profile')}
                   className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
@@ -646,6 +685,10 @@ function AppContent() {
                 <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
                   <span>View profile</span>
                   <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">P</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>Activity feed</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">A</kbd>
                 </div>
                 <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
                   <span>Clear search</span>

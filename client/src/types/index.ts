@@ -80,8 +80,11 @@ export interface CollectionQuote {
 }
 
 export interface Activity {
-  type: 'like' | 'collectionUpdate';
-  timestamp: string;
+  id: string;
+  userId: string;
+  userName: string;
+  activityType: 'like' | 'collectionCreate' | 'collectionUpdate' | 'quoteAdd';
+  createdAt: string;
   quote?: {
     id: string;
     text: string;
@@ -90,7 +93,9 @@ export interface Activity {
   collection?: {
     id: string;
     name: string;
+    description: string | null;
   };
+  metadata?: Record<string, unknown>;
 }
 
 export interface UserStats {

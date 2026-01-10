@@ -7,6 +7,7 @@ import categoriesRouter from './routes/categories';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import collectionsRouter from './routes/collections';
+import activityRouter from './routes/activity';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/quotes', quotesRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/collections', collectionsRouter);
+app.use('/api/activity', activityRouter);
 
 // Error handling middleware (must be last)
 app.use(notFoundHandler);

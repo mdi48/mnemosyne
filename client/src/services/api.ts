@@ -274,13 +274,25 @@ class ApiClient {
     return this.request<ApiResponse<Collection[]>>(`/users/${id}/collections`);
   }
 
-  async getUserActivity(id: string, limit?: number): Promise<ApiResponse<Activity[]>> {
-    const query = limit ? `?limit=${limit}` : '';
-    return this.request<ApiResponse<Activity[]>>(`/users/${id}/activity${query}`);
-  }
 
   async getUserStats(id: string): Promise<ApiResponse<UserStats>> {
     return this.request<ApiResponse<UserStats>>(`/users/stats/${id}`);
+  }
+
+  // Activity feed
+  async getGlobalActivityFeed(limit?: number): Promise<ApiResponse<Activity[]>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request<ApiResponse<Activity[]>>(`/activity/feed${query}`);
+  }
+
+  async getMyActivityFeed(limit?: number): Promise<ApiResponse<Activity[]>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request<ApiResponse<Activity[]>>(`/activity/me${query}`);
+  }
+
+  async getUserActivityFeed(userId: string, limit?: number): Promise<ApiResponse<Activity[]>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request<ApiResponse<Activity[]>>(`/activity/user/${userId}${query}`);
   }
 }
 
