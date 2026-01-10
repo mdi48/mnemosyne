@@ -45,6 +45,94 @@ router.get('/profile', authenticate, async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/users/stats/:userId - Get user statistics
+router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const currentUserId = req.user?.userId;
+
+    // Fetch user to check privacy settings
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, likesPrivate: true }
+    });
+
+    if (!user) {
+      const response: ApiResponse<null> = {
+        success: false,
+        error: 'User not found'
+      };
+      return res.status(404).json(response);
+    }
+
+    // Get total likes given by this user
+    const likesGiven = await prisma.quoteLike.count({
+      where: { userId }
+    });
+
+    // Get total likes received on quotes (preparing for user-submitted quotes)
+    // For now this will be 0, but structure is ready
+    const likesReceived = 0;
+
+    // Get total collections created
+    const collectionsCount = await prisma.collection.count({
+      where: { userId }
+    });
+
+    // Get total quotes added (preparing for user-submitted quotes)
+    // For now this will be 0, but structure is ready
+    const quotesAdded = 0;
+
+    // Get collection details if viewing own profile or user's stats
+    const collections = currentUserId === userId ? await prisma.collection.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        _count: {
+          select: { quotes: true }
+        },
+        createdAt: true,
+        updatedAt: true
+      },
+      orderBy: { updatedAt: 'desc' }
+    }) : null;
+
+    const stats = {
+      userId: user.id,
+      userName: user.name,
+      stats: {
+        likesGiven,
+        likesReceived,
+        collectionsCount,
+        quotesAdded
+      },
+      collections: collections ? collections.map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        quotesCount: c._count.quotes,
+        createdAt: c.createdAt,
+        updatedAt: c.updatedAt
+      })) : undefined
+    };
+
+    const response: ApiResponse<typeof stats> = {
+      success: true,
+      data: stats
+    };
+    res.json(response);
+  } catch (error) {
+    console.error('Get user stats error:', error);
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to fetch user statistics'
+    };
+    res.status(500).json(response);
+  }
+});
+
 // PATCH /api/users/profile - Update current user's profile
 router.patch('/profile', authenticate, async (req: Request, res: Response) => {
   try {
