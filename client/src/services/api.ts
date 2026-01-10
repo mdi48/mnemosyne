@@ -1,4 +1,4 @@
-import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike, User, Collection, CollectionQuote, Activity } from '../types';
+import type { Quote, Category, ApiResponse, PaginatedResponse, CreateQuoteRequest, QuoteLike, User, Collection, CollectionQuote, Activity, UserStats } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
@@ -277,6 +277,10 @@ class ApiClient {
   async getUserActivity(id: string, limit?: number): Promise<ApiResponse<Activity[]>> {
     const query = limit ? `?limit=${limit}` : '';
     return this.request<ApiResponse<Activity[]>>(`/users/${id}/activity${query}`);
+  }
+
+  async getUserStats(id: string): Promise<ApiResponse<UserStats>> {
+    return this.request<ApiResponse<UserStats>>(`/users/stats/${id}`);
   }
 }
 

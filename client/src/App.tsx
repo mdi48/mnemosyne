@@ -6,11 +6,12 @@ import { AuthProvider } from './contexts/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import AuthModal from './components/AuthModal'
 import ProfileSettings from './components/ProfileSettings'
+import  ProfilePage  from './components/ProfilePage'
 import { LikeButton } from './components/LikeButton'
 
 function AppContent() {
   const { user, logout, isAuthenticated } = useAuth()
-  const [currentView, setCurrentView] = useState<'random' | 'management'>('random')
+  const [currentView, setCurrentView] = useState<'random' | 'management' | 'profile'>('random')
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login')
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false)
@@ -197,6 +198,13 @@ function AppContent() {
           setCurrentView('management')
           break
 
+        case 'p':
+        case 'P': // P - Go to profile (only if authenticated)
+          if (isAuthenticated) {
+            setCurrentView('profile')
+          }
+          break
+  
         case '?': // ? - Show keyboard shortcuts help
           e.preventDefault()
           setShowShortcutsHelp(true)
@@ -206,7 +214,7 @@ function AppContent() {
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [currentQuote, searchMode, authModalOpen, profileSettingsOpen, showShortcutsHelp, fetchRandomQuote, clearSearch])
+  }, [currentQuote, searchMode, authModalOpen, profileSettingsOpen, showShortcutsHelp, isAuthenticated, fetchRandomQuote, clearSearch])
 
   if (currentView === 'management') {
     return <QuoteManagement onBackToRandom={() => {
@@ -216,6 +224,24 @@ function AppContent() {
         fetchQuoteById(currentQuote.id)
       }
     }} />
+  }
+  
+    if (currentView === 'profile') {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <div className="bg-white shadow-sm border-b mb-6">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <button
+              onClick={() => setCurrentView('random')}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+            >
+              ← Back to Quotes
+            </button>
+          </div>
+        </div>
+        <ProfilePage />
+      </div>
+    );
   }
 
   return (
@@ -228,6 +254,15 @@ function AppContent() {
             {isAuthenticated && user ? (
               <div className="flex items-center gap-4">
                 <span className="text-white/80">Welcome, {user.name}</span>
+                <button
+                  onClick={() => setCurrentView('profile')}
+                  className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
+                  title="Profile"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </button>
                 <button
                   onClick={() => setProfileSettingsOpen(true)}
                   className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
@@ -607,6 +642,10 @@ function AppContent() {
                 <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
                   <span>View library</span>
                   <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">L</kbd>
+                </div>
+                <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
+                  <span>View profile</span>
+                  <kbd className="px-3 py-1 bg-white/10 rounded border border-white/30 font-mono text-sm">P</kbd>
                 </div>
                 <div className="flex items-center justify-between text-white/90 hover:bg-white/5 p-3 rounded-lg transition-colors">
                   <span>Clear search</span>

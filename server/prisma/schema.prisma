@@ -22,6 +22,7 @@ model User {
   updatedAt       DateTime    @updatedAt
   likedQuotes     QuoteLike[]
   collections     Collection[]
+  activities      Activity[]
 
   @@map("users")
 }
@@ -77,4 +78,19 @@ model CollectionQuote {
 
   @@unique([collectionId, quoteId]) // A quote can only be in a collection once
   @@map("collection_quotes")
+}
+
+model Activity {
+  id           String   @id @default(uuid())
+  userId       String
+  activityType String   // 'like', 'collectionCreate', 'collectionUpdate', 'quoteAdd'
+  quoteId      String?
+  collectionId String?
+  metadata     String?  // JSON string for additional data
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("activities")
 }
