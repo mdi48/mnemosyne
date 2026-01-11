@@ -86,14 +86,14 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
   return (
     <div className="max-w-4xl mx-auto p-6">
       {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 border dark:border-gray-700">
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
             {stats.userName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">{stats.userName}</h1>
-            <p className="text-gray-600">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{stats.userName}</h1>
+            <p className="text-gray-600 dark:text-gray-400">
               {isOwnProfile ? 'Your Profile' : 'User Profile'}
             </p>
           </div>
@@ -102,14 +102,14 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
 
       {/* Tabs */}
       {isOwnProfile && (
-        <div className="bg-white rounded-lg shadow-md mb-6">
-          <div className="flex border-b">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6 border dark:border-gray-700">
+          <div className="flex border-b dark:border-gray-700">
             <button
               onClick={() => setActiveTab('overview')}
               className={`px-6 py-3 font-medium ${
                 activeTab === 'overview'
                   ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               Overview
@@ -119,7 +119,7 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
               className={`px-6 py-3 font-medium ${
                 activeTab === 'collections'
                   ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               Collections
@@ -129,7 +129,7 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
               className={`px-6 py-3 font-medium ${
                 activeTab === 'settings'
                   ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-800'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               Settings
@@ -168,8 +168,8 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
 
           {/* Recent Collections */}
           {stats.collections && stats.collections.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Collections</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border dark:border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Collections</h2>
               <div className="space-y-3">
                 {stats.collections.slice(0, 5).map((collectionSummary) => (
                   <button
@@ -186,13 +186,13 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
                       };
                       setSelectedCollection(fullCollection);
                     }}
-                    className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    className="w-full text-left p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800">{collectionSummary.name}</h3>
+                        <h3 className="font-semibold text-gray-800 dark:text-gray-100">{collectionSummary.name}</h3>
                         {collectionSummary.description && (
-                          <p className="text-sm text-gray-600 mt-1">{collectionSummary.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{collectionSummary.description}</p>
                         )}
                       </div>
                       <div className="text-right ml-4">
@@ -227,8 +227,8 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
       )}
 
       {activeTab === 'collections' && isOwnProfile && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">All Collections</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border dark:border-gray-700">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">All Collections</h2>
           {stats.collections && stats.collections.length > 0 ? (
             <div className="space-y-3">
               {stats.collections.map((collection) => (
@@ -246,20 +246,20 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
                     };
                     setSelectedCollection(fullCollection);
                   }}
-                  className="w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="w-full text-left p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800">{collection.name}</h3>
+                      <h3 className="font-semibold text-gray-800 dark:text-gray-100">{collection.name}</h3>
                       {collection.description && (
-                        <p className="text-sm text-gray-600 mt-1">{collection.description}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{collection.description}</p>
                       )}
                     </div>
                     <div className="text-right ml-4">
-                      <div className="text-sm font-medium text-blue-600">
+                      <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
                         {collection.quotesCount} {collection.quotesCount === 1 ? 'quote' : 'quotes'}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         Updated {new Date(collection.updatedAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -268,7 +268,7 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
               ))}
             </div>
           ) : (
-            <p className="text-gray-600 text-center py-8">No collections yet.</p>
+            <p className="text-gray-600 dark:text-gray-400 text-center py-8">No collections yet.</p>
           )}
         </div>
       )}
@@ -289,11 +289,11 @@ interface StatCardProps {
 
 function StatCard({ label, value, icon, subtitle }: StatCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 text-center">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center border dark:border-gray-700">
       <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-3xl font-bold text-gray-800">{value}</div>
-      <div className="text-sm text-gray-600">{label}</div>
-      {subtitle && <div className="text-xs text-gray-400 mt-1">{subtitle}</div>}
+      <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">{value}</div>
+      <div className="text-sm text-gray-600 dark:text-gray-400">{label}</div>
+      {subtitle && <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtitle}</div>}
     </div>
   );
 }

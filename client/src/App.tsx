@@ -9,6 +9,7 @@ import ProfileSettings from './components/ProfileSettings'
 import  ProfilePage  from './components/ProfilePage'
 import ActivityFeed from './components/ActivityFeed'
 import { LikeButton } from './components/LikeButton'
+import { ThemeToggle } from './components/ThemeToggle'
 
 function AppContent() {
   const { user, logout, isAuthenticated } = useAuth()
@@ -236,15 +237,16 @@ function AppContent() {
   
     if (currentView === 'profile') {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <div className="bg-white shadow-sm border-b mb-6">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 mb-6">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <button
               onClick={() => setCurrentView('random')}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+              className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               ← Back to Quotes
             </button>
+            <ThemeToggle />
           </div>
         </div>
         <ProfilePage />
@@ -254,17 +256,17 @@ function AppContent() {
 
   if (currentView === 'activity') {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <div className="bg-white shadow-sm border-b mb-6">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 mb-6">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <button
               onClick={() => setCurrentView('random')}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+              className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               ← Back to Quotes
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">Activity Feed</h1>
-            <div className="w-32"></div> {/* Spacer for center alignment */}
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Activity Feed</h1>
+            <ThemeToggle />
           </div>
         </div>
         <div className="max-w-4xl mx-auto px-4">

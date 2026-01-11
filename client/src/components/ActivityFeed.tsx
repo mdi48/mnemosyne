@@ -51,7 +51,7 @@ export default function ActivityFeed({ userId, limit = 50 }: ActivityFeedProps) 
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 rounded-lg p-4">
         <p>{error}</p>
       </div>
     );
@@ -59,15 +59,15 @@ export default function ActivityFeed({ userId, limit = 50 }: ActivityFeedProps) 
 
   if (activities.length === 0) {
     return (
-      <div className="bg-gray-50 rounded-lg p-8 text-center">
-        <p className="text-gray-600">No activity yet. Start liking quotes and creating collections!</p>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
+        <p className="text-gray-600 dark:text-gray-300">No activity yet. Start liking quotes and creating collections!</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
         {userId ? 'User Activity' : 'Recent Activity'}
       </h2>
       
@@ -128,7 +128,7 @@ function ActivityItem({ activity }: ActivityItemProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow border dark:border-gray-700">
       <div className="flex items-start gap-3">
         {/* Icon */}
         <div className="shrink-0 w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl">
@@ -138,33 +138,33 @@ function ActivityItem({ activity }: ActivityItemProps) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-gray-800">{activity.userName}</span>
-            <span className="text-gray-600">{getActivityText()}</span>
+            <span className="font-semibold text-gray-800 dark:text-gray-100">{activity.userName}</span>
+            <span className="text-gray-600 dark:text-gray-400">{getActivityText()}</span>
             {activity.collection && activity.activityType !== 'collectionCreate' && (
-              <span className="font-semibold text-gray-800">{activity.collection.name}</span>
+              <span className="font-semibold text-gray-800 dark:text-gray-100">{activity.collection.name}</span>
             )}
           </div>
 
           {/* Quote preview */}
           {activity.quote && (
-            <div className="mt-2 p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500">
-              <p className="text-gray-800 italic">"{activity.quote.text}"</p>
-              <p className="text-sm text-gray-600 mt-1">— {activity.quote.author}</p>
+            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-blue-500">
+              <p className="text-gray-800 dark:text-gray-100 italic">"{activity.quote.text}"</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">— {activity.quote.author}</p>
             </div>
           )}
 
           {/* Collection info (for collectionCreate) */}
           {activity.collection && activity.activityType === 'collectionCreate' && (
-            <div className="mt-2 p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500">
-              <p className="font-semibold text-gray-800">{activity.collection.name}</p>
+            <div className="mt-2 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg border-l-4 border-purple-500">
+              <p className="font-semibold text-gray-800 dark:text-gray-100">{activity.collection.name}</p>
               {activity.collection.description && (
-                <p className="text-sm text-gray-600 mt-1">{activity.collection.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{activity.collection.description}</p>
               )}
             </div>
           )}
 
           {/* Timestamp */}
-          <div className="mt-2 text-xs text-gray-500">
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
             {getTimeAgo(activity.createdAt)}
           </div>
         </div>
