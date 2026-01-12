@@ -14,6 +14,7 @@ import { ThemeToggle } from './components/ThemeToggle'
 function AppContent() {
   const { user, logout, isAuthenticated } = useAuth()
   const [currentView, setCurrentView] = useState<'random' | 'management' | 'profile' | 'activity'>('random')
+  const [viewingUserId, setViewingUserId] = useState<string | undefined>(undefined) // For viewing other users' profiles
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authModalView, setAuthModalView] = useState<'login' | 'register'>('login')
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false)
@@ -241,7 +242,10 @@ function AppContent() {
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 mb-6">
           <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
             <button
-              onClick={() => setCurrentView('random')}
+              onClick={() => {
+                setCurrentView('random');
+                setViewingUserId(undefined);
+              }}
               className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
             >
               ← Back to Quotes
@@ -249,7 +253,7 @@ function AppContent() {
             <ThemeToggle />
           </div>
         </div>
-        <ProfilePage />
+        <ProfilePage userId={viewingUserId} />
       </div>
     );
   }
@@ -270,7 +274,12 @@ function AppContent() {
           </div>
         </div>
         <div className="max-w-4xl mx-auto px-4">
-          <ActivityFeed />
+          <ActivityFeed 
+            onUserClick={(userId) => {
+              setViewingUserId(userId);
+              setCurrentView('profile');
+            }}
+          />
         </div>
       </div>
     );

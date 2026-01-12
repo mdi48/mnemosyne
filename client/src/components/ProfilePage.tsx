@@ -147,6 +147,7 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
               label="Likes Given"
               value={stats.stats.likesGiven}
               icon="❤️"
+              subtitle={stats.stats.likesGiven === null ? 'Private' : undefined}
             />
             <StatCard
               label="Likes Received"
@@ -282,7 +283,7 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
 
 interface StatCardProps {
   label: string;
-  value: number;
+  value: number | null;
   icon: string;
   subtitle?: string;
 }
@@ -291,7 +292,7 @@ function StatCard({ label, value, icon, subtitle }: StatCardProps) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center border dark:border-gray-700">
       <div className="text-3xl mb-2">{icon}</div>
-      <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">{value}</div>
+      <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">{value ?? '-'}</div>
       <div className="text-sm text-gray-600 dark:text-gray-400">{label}</div>
       {subtitle && <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtitle}</div>}
     </div>

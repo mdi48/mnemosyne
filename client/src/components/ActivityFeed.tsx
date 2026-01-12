@@ -5,9 +5,10 @@ import type { Activity } from '../types';
 interface ActivityFeedProps {
   userId?: string; // If provided, shows that user's feed; otherwise shows global feed
   limit?: number;
+  onUserClick?: (userId: string) => void; // Callback when username is clicked
 }
 
-export default function ActivityFeed({ userId, limit = 50 }: ActivityFeedProps) {
+export default function ActivityFeed({ userId, limit = 50, onUserClick }: ActivityFeedProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +74,7 @@ export default function ActivityFeed({ userId, limit = 50 }: ActivityFeedProps) 
       
       <div className="space-y-3">
         {activities.map((activity) => (
-          <ActivityItem key={activity.id} activity={activity} />
+          <ActivityItem key={activity.id} activity={activity} onUserClick={onUserClick} />
         ))}
       </div>
     </div>
@@ -82,9 +83,10 @@ export default function ActivityFeed({ userId, limit = 50 }: ActivityFeedProps) 
 
 interface ActivityItemProps {
   activity: Activity;
+  onUserClick?: (userId: string) => void;
 }
 
-function ActivityItem({ activity }: ActivityItemProps) {
+function ActivityItem({ activity, onUserClick }: ActivityItemProps) {
   const getActivityIcon = () => {
     switch (activity.activityType) {
       case 'like':
@@ -138,7 +140,12 @@ function ActivityItem({ activity }: ActivityItemProps) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-gray-800 dark:text-gray-100">{activity.userName}</span>
+            <button
+              onClick={() => onUserClick?.(activity.userId)}
+              className="font-semibold text-gray-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              {activity.userName}
+            </button>
             <span className="text-gray-600 dark:text-gray-400">{getActivityText()}</span>
             {activity.collection && activity.activityType !== 'collectionCreate' && (
               <span className="font-semibold text-gray-800 dark:text-gray-100">{activity.collection.name}</span>

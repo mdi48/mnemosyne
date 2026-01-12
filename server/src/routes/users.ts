@@ -65,10 +65,11 @@ router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) =
       return res.status(404).json(response);
     }
 
-    // Get total likes given by this user
-    const likesGiven = await prisma.quoteLike.count({
+    // Get total likes given by this user (respect privacy)
+    const isOwnProfile = currentUserId === userId;
+    const likesGiven = (!user.likesPrivate || isOwnProfile) ? await prisma.quoteLike.count({
       where: { userId }
-    });
+    }) : null;
 
     // Get total likes received on quotes (preparing for user-submitted quotes)
     // For now this will be 0, but structure is ready
@@ -84,7 +85,7 @@ router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) =
     const quotesAdded = 0;
 
     // Get collection details if viewing own profile or user's stats
-    const collections = currentUserId === userId ? await prisma.collection.findMany({
+    const collections = isOwnProfile ? await prisma.collection.findMany({
       where: { userId },
       select: {
         id: true,

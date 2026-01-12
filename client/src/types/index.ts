@@ -102,7 +102,7 @@ export interface UserStats {
   userId: string;
   userName: string;
   stats: {
-    likesGiven: number;
+    likesGiven: number | null; // null when likesPrivate is true and viewing another user
     likesReceived: number;
     collectionsCount: number;
     quotesAdded: number;
