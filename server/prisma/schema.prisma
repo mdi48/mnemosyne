@@ -17,6 +17,9 @@ model User {
   email           String      @unique
   password        String      // Hashed with bcrypt
   name            String
+  displayName     String?     // Custom display name (falls back to name)
+  bio             String?     // User bio/description
+  avatarUrl       String?     // URL to user's avatar image
   likesPrivate    Boolean     @default(false) // Hide from public like lists
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
