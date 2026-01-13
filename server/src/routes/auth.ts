@@ -21,7 +21,7 @@ const SALT_ROUNDS = 10;
  */
 router.post('/register', validateBody(registerSchema), async (req, res) => {
   try {
-    const { email, password, name, likesPrivate } = req.body;
+    const { email, password, username, likesPrivate } = req.body;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -44,7 +44,7 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
       data: {
         email,
         password: hashedPassword,
-        name,
+        username,
         likesPrivate
       }
     });
@@ -67,7 +67,7 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
         user: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          username: user.username,
           likesPrivate: user.likesPrivate
         },
         accessToken
@@ -132,7 +132,7 @@ router.post('/login', validateBody(loginSchema), async (req, res) => {
         user: {
           id: user.id,
           email: user.email,
-          name: user.name,
+          username: user.username,
           likesPrivate: user.likesPrivate
         },
         accessToken
@@ -196,7 +196,10 @@ router.get('/me', authenticate, async (req, res) => {
       select: {
         id: true,
         email: true,
-        name: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
         likesPrivate: true,
         createdAt: true
       }
