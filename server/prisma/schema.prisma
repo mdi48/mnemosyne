@@ -16,8 +16,8 @@ model User {
   id              String      @id @default(uuid())
   email           String      @unique
   password        String      // Hashed with bcrypt
-  name            String
-  displayName     String?     // Custom display name (falls back to name)
+  username        String      // User's handle/identifier
+  displayName     String?     // Custom display name (falls back to username)
   bio             String?     // User bio/description
   avatarUrl       String?     // URL to user's avatar image
   likesPrivate    Boolean     @default(false) // Hide from public like lists
