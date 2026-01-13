@@ -88,12 +88,36 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
       {/* Profile Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6 border dark:border-gray-700">
         <div className="flex items-center gap-4">
-          <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-            {stats.userName.charAt(0).toUpperCase()}
+          {stats.user.avatarUrl ? (
+            <img 
+              src={stats.user.avatarUrl} 
+              alt={`${stats.user.displayName || stats.userName}'s avatar`}
+              className="w-20 h-20 rounded-full object-cover"
+              onError={(e) => {
+                const imgEl = e.target as HTMLImageElement;
+                imgEl.style.display = 'none';
+                const fallback = imgEl.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div 
+            className="w-20 h-20 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl font-bold"
+            style={{ display: stats.user.avatarUrl ? 'none' : 'flex' }}
+          >
+            {(stats.user.displayName || stats.userName).charAt(0).toUpperCase()}
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">{stats.userName}</h1>
-            <p className="text-gray-600 dark:text-gray-400">
+          <div className="flex-1">
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+              {stats.user.displayName || stats.userName}
+            </h1>
+            {stats.user.displayName && (
+              <p className="text-gray-500 dark:text-gray-400 text-sm">@{stats.userName}</p>
+            )}
+            {stats.user.bio && (
+              <p className="text-gray-600 dark:text-gray-300 mt-2">{stats.user.bio}</p>
+            )}
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
               {isOwnProfile ? 'Your Profile' : 'User Profile'}
             </p>
           </div>
