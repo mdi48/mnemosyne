@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '../generated/prisma/client';
 import { authenticate, optionalAuth } from '../middleware/auth';
 import { ApiResponse, PaginatedResponse } from '../types';
+import { validateBody } from '../middleware/validate';
+import { updateProfileSchema } from '../validation/authSchemas';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -16,7 +18,10 @@ router.get('/profile', authenticate, async (req: Request, res: Response) => {
       select: {
         id: true,
         email: true,
-        name: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
         likesPrivate: true,
         createdAt: true
       }
@@ -54,7 +59,16 @@ router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) =
     // Fetch user to check privacy settings
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, likesPrivate: true }
+      select: { 
+        id: true, 
+        username: true, 
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
+        email: true,
+        likesPrivate: true,
+        createdAt: true
+      }
     });
 
     if (!user) {
@@ -102,7 +116,17 @@ router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) =
 
     const stats = {
       userId: user.id,
-      userName: user.name,
+      userName: user.username,
+      user: {
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
+        email: user.email,
+        likesPrivate: user.likesPrivate,
+        createdAt: user.createdAt
+      },
       stats: {
         likesGiven,
         likesReceived,
@@ -135,10 +159,10 @@ router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) =
 });
 
 // PATCH /api/users/profile - Update current user's profile
-router.patch('/profile', authenticate, async (req: Request, res: Response) => {
+router.patch('/profile', authenticate, validateBody(updateProfileSchema), async (req: Request, res: Response) => {
   try {
     const userId = req.user!.userId;
-    const { name, email, likesPrivate } = req.body;
+    const { username, email, displayName, bio, avatarUrl, likesPrivate } = req.body;
 
     // If email is being changed, check if it's already taken by another user
     if (email !== undefined) {
@@ -156,8 +180,11 @@ router.patch('/profile', authenticate, async (req: Request, res: Response) => {
     }
 
     const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
+    if (username !== undefined) updateData.username = username;
     if (email !== undefined) updateData.email = email;
+    if (displayName !== undefined) updateData.displayName = displayName;
+    if (bio !== undefined) updateData.bio = bio;
+    if (avatarUrl !== undefined) updateData.avatarUrl = avatarUrl;
     if (likesPrivate !== undefined) updateData.likesPrivate = likesPrivate;
 
     const updatedUser = await prisma.user.update({
@@ -166,7 +193,10 @@ router.patch('/profile', authenticate, async (req: Request, res: Response) => {
       select: {
         id: true,
         email: true,
-        name: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
         likesPrivate: true,
         createdAt: true
       }
@@ -197,7 +227,8 @@ router.get('/', async (req: Request, res: Response) => {
     const where: any = {};
     if (search) {
       where.OR = [
-        { name: { contains: search as string } },
+        { username: { contains: search as string } },
+        { displayName: { contains: search as string } },
         { email: { contains: search as string } }
       ];
     }
@@ -207,7 +238,10 @@ router.get('/', async (req: Request, res: Response) => {
       where,
       select: {
         id: true,
-        name: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
         email: true,
         createdAt: true,
         _count: {
@@ -226,7 +260,10 @@ router.get('/', async (req: Request, res: Response) => {
       success: true,
       data: users.map(u => ({
         id: u.id,
-        name: u.name,
+        username: u.username,
+        displayName: u.displayName,
+        bio: u.bio,
+        avatarUrl: u.avatarUrl,
         email: u.email,
         createdAt: u.createdAt,
         likeCount: u._count.likedQuotes,
@@ -259,7 +296,10 @@ router.get('/:id', optionalAuth, async (req: Request, res: Response) => {
       where: { id },
       select: {
         id: true,
-        name: true,
+        username: true,
+        displayName: true,
+        bio: true,
+        avatarUrl: true,
         email: true,
         likesPrivate: true,
         createdAt: true,
@@ -284,7 +324,10 @@ router.get('/:id', optionalAuth, async (req: Request, res: Response) => {
       success: true,
       data: {
         id: user.id,
-        name: user.name,
+        username: user.username,
+        displayName: user.displayName,
+        bio: user.bio,
+        avatarUrl: user.avatarUrl,
         email: user.email,
         createdAt: user.createdAt,
         likeCount: user._count.likedQuotes,
