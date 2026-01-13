@@ -56,6 +56,7 @@ export default function Register({ onSwitchToLogin, onClose, onSuccess }: Regist
             className="w-full bg-neutral-800 text-white px-4 py-2 rounded border border-neutral-700 focus:border-blue-500 focus:outline-none"
             required
             autoFocus
+            maxLength={30}
           />
         </div>
 
