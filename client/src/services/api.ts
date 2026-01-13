@@ -197,7 +197,14 @@ class ApiClient {
     return this.request<ApiResponse<User>>('/users/profile');
   }
 
-  async updateUserProfile(data: { name?: string; email?: string; likesPrivate?: boolean }): Promise<ApiResponse<User>> {
+  async updateUserProfile(data: { 
+    username?: string; 
+    email?: string; 
+    displayName?: string | null;
+    bio?: string | null;
+    avatarUrl?: string | null;
+    likesPrivate?: boolean;
+  }): Promise<ApiResponse<User>> {
     return this.request<ApiResponse<User>>('/users/profile', {
       method: 'PATCH',
       body: JSON.stringify(data),
