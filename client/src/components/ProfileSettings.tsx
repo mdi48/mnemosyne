@@ -10,7 +10,10 @@ interface ProfileSettingsProps {
 export default function ProfileSettings({ isOpen, onClose }: ProfileSettingsProps) {
   const { user, setUser } = useAuth();
   const [likesPrivate, setLikesPrivate] = useState(user?.likesPrivate ?? false);
-  const [name, setName] = useState(user?.name ?? '');
+  const [username, setUsername] = useState(user?.username ?? '');
+  const [displayName, setDisplayName] = useState(user?.displayName ?? '');
+  const [bio, setBio] = useState(user?.bio ?? '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +22,10 @@ export default function ProfileSettings({ isOpen, onClose }: ProfileSettingsProp
   // Sync state with current user when user changes or modal opens
   useEffect(() => {
     if (user) {
-      setName(user.name);
+      setUsername(user.username);
+      setDisplayName(user.displayName ?? '');
+      setBio(user.bio ?? '');
+      setAvatarUrl(user.avatarUrl ?? '');
       setEmail(user.email);
       setLikesPrivate(user.likesPrivate);
     }
@@ -35,8 +41,11 @@ export default function ProfileSettings({ isOpen, onClose }: ProfileSettingsProp
 
     try {
       const response = await apiClient.updateUserProfile({
-        name,
+        username,
         email,
+        displayName: displayName || null,
+        bio: bio || null,
+        avatarUrl: avatarUrl || null,
         likesPrivate
       });
 
@@ -88,17 +97,82 @@ export default function ProfileSettings({ isOpen, onClose }: ProfileSettingsProp
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-white/80 mb-2">
-              Name
+            <label htmlFor="username" className="block text-white/80 mb-2">
+              Username
             </label>
             <input
               type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-neutral-800 text-white px-4 py-2 rounded border border-neutral-700 focus:border-blue-500 focus:outline-none"
               required
+              maxLength={30}
             />
+          </div>
+
+          <div>
+            <label htmlFor="displayName" className="block text-white/80 mb-2">
+              Display Name <span className="text-white/40 text-sm">(optional)</span>
+            </label>
+            <input
+              type="text"
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className="w-full bg-neutral-800 text-white px-4 py-2 rounded border border-neutral-700 focus:border-blue-500 focus:outline-none"
+              placeholder="Leave empty to use your username"
+              maxLength={100}
+            />
+            <p className="text-white/40 text-xs mt-1">
+              This will be displayed instead of your username if set
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="bio" className="block text-white/80 mb-2">
+              Bio <span className="text-white/40 text-sm">(optional)</span>
+            </label>
+            <textarea
+              id="bio"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full bg-neutral-800 text-white px-4 py-2 rounded border border-neutral-700 focus:border-blue-500 focus:outline-none resize-none"
+              placeholder="Tell others about yourself..."
+              rows={3}
+              maxLength={500}
+            />
+            <p className="text-white/40 text-xs mt-1">
+              {bio.length}/500 characters
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="avatarUrl" className="block text-white/80 mb-2">
+              Avatar URL <span className="text-white/40 text-sm">(optional)</span>
+            </label>
+            <input
+              type="url"
+              id="avatarUrl"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              className="w-full bg-neutral-800 text-white px-4 py-2 rounded border border-neutral-700 focus:border-blue-500 focus:outline-none"
+              placeholder="https://example.com/avatar.jpg"
+              maxLength={500}
+            />
+            {avatarUrl && (
+              <div className="mt-2 flex items-center gap-2">
+                <img 
+                  src={avatarUrl} 
+                  alt="Avatar preview" 
+                  className="w-12 h-12 rounded-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                <span className="text-white/40 text-xs">Preview</span>
+              </div>
+            )}
           </div>
 
           <div>
