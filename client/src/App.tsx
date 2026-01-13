@@ -294,7 +294,7 @@ function AppContent() {
           <div className="flex justify-end mb-4">
             {isAuthenticated && user ? (
               <div className="flex items-center gap-4">
-                <span className="text-white/80">Welcome, {user.name}</span>
+                <span className="text-white/80">Welcome, {user.displayName || user.username}</span>
                 <button
                   onClick={() => setCurrentView('activity')}
                   className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors border border-white/20"
