@@ -48,7 +48,10 @@ export interface CreateQuoteRequest {
 export interface User {
   id: string;
   email: string;
-  name: string;
+  username: string;
+  displayName?: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
   likesPrivate: boolean;
   createdAt?: string;
   likeCount?: number;
@@ -101,6 +104,7 @@ export interface Activity {
 export interface UserStats {
   userId: string;
   userName: string;
+  user: User; // Full user object with profile fields
   stats: {
     likesGiven: number | null; // null when likesPrivate is true and viewing another user
     likesReceived: number;
