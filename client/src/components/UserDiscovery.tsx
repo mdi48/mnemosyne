@@ -100,8 +100,8 @@ export default function UserDiscovery({ onUserSelect }: UserDiscoveryProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <h3 className="text-white font-semibold text-lg">{user.name}</h3>
-                  <p className="text-white/60 text-sm">{user.email}</p>
+                  <h3 className="text-white font-semibold text-lg">{user.displayName || user.username}</h3>
+                  <p className="text-white/60 text-sm">@{user.username}</p>
                   {user.createdAt && (
                     <p className="text-white/40 text-xs mt-1">
                       Joined {new Date(user.createdAt).toLocaleDateString('en-US', {
