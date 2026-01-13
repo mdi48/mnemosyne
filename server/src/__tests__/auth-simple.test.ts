@@ -26,14 +26,14 @@ describe('Authentication API', () => {
         .send({
           email: 'test@example.com',
           password: 'password123',
-          name: 'Test User',
+          username: 'Test User',
           likesPrivate: false,
         });
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
       expect(response.body.data.user.email).toBe('test@example.com');
-      expect(response.body.data.user.name).toBe('Test User');
+      expect(response.body.data.user.username).toBe('Test User');
       expect(response.body.data.accessToken).toBeDefined();
       expect(response.body.data.user.password).toBeUndefined();
     });
@@ -44,7 +44,7 @@ describe('Authentication API', () => {
         .send({
           email: 'test@example.com',
           password: 'password123',
-          name: 'Test User',
+          username: 'Test User',
         });
 
       const response = await request(app)
@@ -52,7 +52,7 @@ describe('Authentication API', () => {
         .send({
           email: 'test@example.com',
           password: 'password456',
-          name: 'Another User',
+          username: 'Another User',
         });
 
       expect(response.status).toBe(400);
@@ -65,7 +65,7 @@ describe('Authentication API', () => {
         .send({
           email: 'not-an-email',
           password: 'password123',
-          name: 'Test User',
+          username: 'Test User',
         });
 
       expect(response.status).toBe(400);
@@ -78,7 +78,7 @@ describe('Authentication API', () => {
         .send({
           email: 'test@example.com',
           password: 'short',
-          name: 'Test User',
+          username: 'Test User',
         });
 
       expect(response.status).toBe(400);
@@ -93,7 +93,7 @@ describe('Authentication API', () => {
         .send({
           email: 'test@example.com',
           password: 'password123',
-          name: 'Test User',
+          username: 'Test User',
         });
     });
 
@@ -145,7 +145,7 @@ describe('Authentication API', () => {
         .send({
           email: 'test@example.com',
           password: 'password123',
-          name: 'Test User',
+          username: 'Test User',
         });
 
       accessToken = response.body.data.accessToken;

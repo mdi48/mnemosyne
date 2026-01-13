@@ -27,7 +27,7 @@ describe('Quotes API with Like Data', () => {
       .send({
         email: 'testuser@example.com',
         password: 'password123',
-        name: 'Test User',
+        username: 'Test User',
       });
 
     accessToken = registerResponse.body.data.accessToken;
@@ -106,7 +106,7 @@ describe('Quotes API with Like Data', () => {
         .send({
           email: 'user2@example.com',
           password: 'password123',
-          name: 'User Two',
+          username: 'User Two',
         });
 
       await prisma.quoteLike.create({

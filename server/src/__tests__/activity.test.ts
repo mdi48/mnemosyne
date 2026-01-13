@@ -36,7 +36,7 @@ describe('Activity Tracking System', () => {
       .send({
         email: 'activitytest@test.com',
         password: 'password123',
-        name: 'Activity Tester'
+        username: 'Activity Tester',
       });
 
     authToken = registerResponse.body.data.accessToken;

@@ -26,7 +26,7 @@ describe('Quote Likes API', () => {
       .send({
         email: 'testuser@example.com',
         password: 'password123',
-        name: 'Test User',
+        username: 'Test User',
       });
 
     accessToken = registerResponse.body.data.accessToken;
@@ -137,7 +137,7 @@ describe('Quote Likes API', () => {
         .send({
           email: 'other@example.com',
           password: 'password123',
-          name: 'Other User',
+          username: 'Other User',
         });
 
       const otherToken = otherUserResponse.body.data.accessToken;
