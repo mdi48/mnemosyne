@@ -59,7 +59,7 @@ export async function getUserActivityFeed(userId: string, limit: number = 20): P
     include: {
       user: {
         select: {
-          name: true
+          username: true
         }
       }
     }
@@ -72,7 +72,7 @@ export async function getUserActivityFeed(userId: string, limit: number = 20): P
     const enriched: ActivityWithDetails = {
       id: activity.id,
       userId: activity.userId,
-      userName: activity.user.name,
+      userName: activity.user.username,
       activityType: activity.activityType,
       createdAt: activity.createdAt,
       metadata: activity.metadata ? JSON.parse(activity.metadata) : undefined
@@ -125,7 +125,7 @@ export async function getGlobalActivityFeed(limit: number = 50): Promise<Activit
     include: {
       user: {
         select: {
-          name: true
+          username: true
         }
       }
     }
@@ -138,7 +138,7 @@ export async function getGlobalActivityFeed(limit: number = 50): Promise<Activit
     const enriched: ActivityWithDetails = {
       id: activity.id,
       userId: activity.userId,
-      userName: activity.user.name,
+      userName: activity.user.username,
       activityType: activity.activityType,
       createdAt: activity.createdAt,
       metadata: activity.metadata ? JSON.parse(activity.metadata) : undefined
