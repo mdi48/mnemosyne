@@ -4,18 +4,22 @@ import { apiClient } from '../services/api';
 import type { UserStats, Collection } from '../types';
 import ProfileSettings from './ProfileSettings';
 import { CollectionView } from './CollectionView';
+import { FollowButton } from './FollowButton';
+import { FollowList } from './FollowList';
 
 interface ProfilePageProps {
   userId?: string; // If provided, shows that user's profile; otherwise shows current user
+  onUserClick?: (userId: string) => void; // Callback for navigating to another user's profile
 }
 
-export default function ProfilePage({ userId }: ProfilePageProps) {
+export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
   const { user: currentUser } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'collections' | 'settings'>('overview');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
+  const [followListState, setFollowListState] = useState<{ type: 'followers' | 'following'; userId: string } | null>(null);
 
 
   const isOwnProfile = !userId || userId === currentUser?.id;
@@ -108,9 +112,12 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
             {(stats.user.displayName || stats.userName).charAt(0).toUpperCase()}
           </div>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
-              {stats.user.displayName || stats.userName}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
+                {stats.user.displayName || stats.userName}
+              </h1>
+              {!isOwnProfile && <FollowButton userId={stats.userId} />}
+            </div>
             {stats.user.displayName && (
               <p className="text-gray-500 dark:text-gray-400 text-sm">@{stats.userName}</p>
             )}
@@ -168,26 +175,29 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <StatCard
+              label="Followers"
+              value={stats.stats.followersCount}
+              icon="👥"
+              onClick={() => setFollowListState({ type: 'followers', userId: stats.userId })}
+              clickable
+            />
+            <StatCard
+              label="Following"
+              value={stats.stats.followingCount}
+              icon="➕"
+              onClick={() => setFollowListState({ type: 'following', userId: stats.userId })}
+              clickable
+            />
+            <StatCard
               label="Likes Given"
               value={stats.stats.likesGiven}
               icon="❤️"
               subtitle={stats.stats.likesGiven === null ? 'Private' : undefined}
             />
             <StatCard
-              label="Likes Received"
-              value={stats.stats.likesReceived}
-              icon="⭐"
-            />
-            <StatCard
               label="Collections"
               value={stats.stats.collectionsCount}
               icon="📚"
-            />
-            <StatCard
-              label="Quotes Added"
-              value={stats.stats.quotesAdded}
-              icon="💬"
-              subtitle="Coming soon"
             />
           </div>
 
@@ -301,6 +311,16 @@ export default function ProfilePage({ userId }: ProfilePageProps) {
       {activeTab === 'settings' && isOwnProfile && (
         <ProfileSettings isOpen={activeTab === 'settings'} onClose={() => setActiveTab('overview')} />
       )}
+
+      {/* Follow List Modal */}
+      {followListState && onUserClick && (
+        <FollowList
+          userId={followListState.userId}
+          type={followListState.type}
+          onUserClick={onUserClick}
+          onClose={() => setFollowListState(null)}
+        />
+      )}
     </div>
   );
 }
@@ -310,15 +330,24 @@ interface StatCardProps {
   value: number | null;
   icon: string;
   subtitle?: string;
+  onClick?: () => void;
+  clickable?: boolean;
 }
 
-function StatCard({ label, value, icon, subtitle }: StatCardProps) {
+function StatCard({ label, value, icon, subtitle, onClick, clickable }: StatCardProps) {
+  const Component = clickable ? 'button' : 'div';
+  
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center border dark:border-gray-700">
+    <Component
+      onClick={onClick}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center border dark:border-gray-700 ${
+        clickable ? 'cursor-pointer hover:shadow-lg hover:scale-105 transition-all' : ''
+      }`}
+    >
       <div className="text-3xl mb-2">{icon}</div>
       <div className="text-3xl font-bold text-gray-800 dark:text-gray-100">{value ?? '-'}</div>
       <div className="text-sm text-gray-600 dark:text-gray-400">{label}</div>
       {subtitle && <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">{subtitle}</div>}
-    </div>
+    </Component>
   );
 }
