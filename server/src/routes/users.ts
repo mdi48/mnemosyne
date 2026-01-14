@@ -190,6 +190,21 @@ router.patch('/profile', authenticate, validateBody(updateProfileSchema), async 
       }
     }
 
+    // If username is being changed, check if it's already taken by another user
+    if (username !== undefined) {
+      const existingUsername = await prisma.user.findUnique({
+        where: { username }
+      });
+
+      if (existingUsername && existingUsername.id !== userId) {
+        const response: ApiResponse<null> = {
+          success: false,
+          error: 'Username is already taken'
+        };
+        return res.status(400).json(response);
+      }
+    }
+
     const updateData: any = {};
     if (username !== undefined) updateData.username = username;
     if (email !== undefined) updateData.email = email;

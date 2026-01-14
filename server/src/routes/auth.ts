@@ -36,6 +36,19 @@ router.post('/register', validateBody(registerSchema), async (req, res) => {
       return;
     }
 
+    // Check if username is already taken
+    const existingUsername = await prisma.user.findUnique({
+      where: { username }
+    });
+
+    if (existingUsername) {
+      res.status(400).json({
+        success: false,
+        error: 'Username already taken.'
+      });
+      return;
+    }
+
     // Hash password
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
