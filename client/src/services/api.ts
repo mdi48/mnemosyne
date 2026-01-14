@@ -193,6 +193,30 @@ class ApiClient {
     });
   }
 
+  async followUser(userId: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/follows/${userId}`, {
+      method: 'POST',
+    });
+  }
+
+  async unfollowUser(userId: string): Promise<ApiResponse<null>> {
+    return this.request<ApiResponse<null>>(`/follows/${userId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async checkFollowStatus(userId: string): Promise<ApiResponse<{ isFollowing: boolean }>> {
+    return this.request<ApiResponse<{ isFollowing: boolean }>>(`/follows/check/${userId}`);
+  }
+
+  async getUserFollowers(userId: string): Promise<ApiResponse<User[]>> {
+    return this.request<ApiResponse<User[]>>(`/follows/${userId}/followers`);
+  }
+
+  async getUserFollowing(userId: string): Promise<ApiResponse<User[]>> {
+    return this.request<ApiResponse<User[]>>(`/follows/${userId}/following`);
+  }
+
   async getUserProfile(): Promise<ApiResponse<User>> {
     return this.request<ApiResponse<User>>('/users/profile');
   }
