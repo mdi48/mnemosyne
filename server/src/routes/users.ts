@@ -98,6 +98,15 @@ router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) =
     // For now this will be 0, but structure is ready
     const quotesAdded = 0;
 
+    // Get follower and following counts
+    const followersCount = await prisma.follow.count({
+      where: { followingId: userId }
+    });
+
+    const followingCount = await prisma.follow.count({
+      where: { followerId: userId }
+    });
+
     // Get collection details if viewing own profile or user's stats
     const collections = isOwnProfile ? await prisma.collection.findMany({
       where: { userId },
@@ -131,7 +140,9 @@ router.get('/stats/:userId', optionalAuth, async (req: Request, res: Response) =
         likesGiven,
         likesReceived,
         collectionsCount,
-        quotesAdded
+        quotesAdded,
+        followersCount,
+        followingCount
       },
       collections: collections ? collections.map(c => ({
         id: c.id,

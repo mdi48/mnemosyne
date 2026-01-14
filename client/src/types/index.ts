@@ -110,6 +110,8 @@ export interface UserStats {
     likesReceived: number;
     collectionsCount: number;
     quotesAdded: number;
+    followersCount: number;
+    followingCount: number;
   };
   collections?: Array<{
     id: string;
