@@ -25,7 +25,8 @@ async function main() {
     data: {
       email: 'john@example.com',
       password,
-      name: 'John Doe',
+      username: 'johndoe',
+      displayName: 'John Doe',
       likesPrivate: false,
     },
   });
@@ -34,7 +35,8 @@ async function main() {
     data: {
       email: 'jane@example.com',
       password,
-      name: 'Jane Doe',
+      username: 'janedoe',
+      displayName: 'Jane Doe',
       likesPrivate: true,
     },
   });
