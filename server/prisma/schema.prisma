@@ -26,6 +26,10 @@ model User {
   likedQuotes     QuoteLike[]
   collections     Collection[]
   activities      Activity[]
+  
+  // Following relationships
+  following       Follow[]    @relation("UserFollowing")  // Users this user follows
+  followers       Follow[]    @relation("UserFollowers")  // Users following this user
 
   @@map("users")
 }
@@ -96,4 +100,19 @@ model Activity {
   @@index([userId, createdAt])
   @@index([createdAt])
   @@map("activities")
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String   // User who is following
+  followingId String   // User being followed
+  createdAt   DateTime @default(now())
+  
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId]) // A user can only follow another user once
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
 }
