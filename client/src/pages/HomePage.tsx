@@ -7,7 +7,6 @@ import { LikeButton } from '../components/LikeButton';
 import { ShareButton } from '../components/ShareButton';
 import { AddToCollectionButton } from '../components/AddToCollectionButton';
 import AuthModal from '../components/AuthModal';
-import { ThemeToggle } from '../components/ThemeToggle';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -255,7 +254,6 @@ export default function HomePage() {
                 >
                   Sign Up
                 </button>
-                <ThemeToggle />
               </div>
             )}
           </div>
