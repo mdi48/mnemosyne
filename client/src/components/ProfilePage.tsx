@@ -6,6 +6,7 @@ import ProfileSettings from './ProfileSettings';
 import { CollectionView } from './CollectionView';
 import { FollowButton } from './FollowButton';
 import { FollowList } from './FollowList';
+import { LikedQuotesView } from './LikedQuotesView';
 
 interface ProfilePageProps {
   userId?: string; // If provided, shows that user's profile; otherwise shows current user
@@ -20,6 +21,7 @@ export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'collections' | 'settings'>('overview');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [followListState, setFollowListState] = useState<{ type: 'followers' | 'following'; userId: string } | null>(null);
+  const [showLikedQuotes, setShowLikedQuotes] = useState(false);
 
 
   const isOwnProfile = !userId || userId === currentUser?.id;
@@ -193,6 +195,8 @@ export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
               value={stats.stats.likesGiven}
               icon="❤️"
               subtitle={stats.stats.likesGiven === null ? 'Private' : undefined}
+              onClick={stats.stats.likesGiven !== null ? () => setShowLikedQuotes(true) : undefined}
+              clickable={stats.stats.likesGiven !== null}
             />
             <StatCard
               label="Collections"
@@ -319,6 +323,15 @@ export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
           type={followListState.type}
           onUserClick={onUserClick}
           onClose={() => setFollowListState(null)}
+        />
+      )}
+
+      {/* Liked Quotes Modal */}
+      {showLikedQuotes && stats && (
+        <LikedQuotesView
+          userId={stats.userId}
+          userName={stats.user.displayName || stats.userName}
+          onClose={() => setShowLikedQuotes(false)}
         />
       )}
     </div>
