@@ -7,13 +7,15 @@ interface LikeButtonProps {
   initialLikeCount: number;
   initialIsLiked: boolean;
   onAuthRequired?: () => void;
+  onLikeChange?: () => void;
 }
 
 export const LikeButton = ({ 
   quoteId, 
   initialLikeCount, 
   initialIsLiked,
-  onAuthRequired
+  onAuthRequired,
+  onLikeChange
 }: LikeButtonProps) => {
   const { user } = useAuth();
   const [likeCount, setLikeCount] = useState(initialLikeCount);
@@ -46,6 +48,11 @@ export const LikeButton = ({
         await apiClient.likeQuote(quoteId);
       } else {
         await apiClient.unlikeQuote(quoteId);
+      }
+      
+      // Call the callback if provided
+      if (onLikeChange) {
+        onLikeChange();
       }
     } catch (error) {
       // Revert new update on error
