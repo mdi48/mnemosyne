@@ -7,6 +7,7 @@ import { CollectionView } from './CollectionView';
 import { FollowButton } from './FollowButton';
 import { FollowList } from './FollowList';
 import { LikedQuotesView } from './LikedQuotesView';
+import { CollectionsListView } from './CollectionsListView';
 
 interface ProfilePageProps {
   userId?: string; // If provided, shows that user's profile; otherwise shows current user
@@ -18,10 +19,11 @@ export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'collections' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview');
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [followListState, setFollowListState] = useState<{ type: 'followers' | 'following'; userId: string } | null>(null);
   const [showLikedQuotes, setShowLikedQuotes] = useState(false);
+  const [showCollections, setShowCollections] = useState(false);
 
 
   const isOwnProfile = !userId || userId === currentUser?.id;
@@ -148,16 +150,6 @@ export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
               Overview
             </button>
             <button
-              onClick={() => setActiveTab('collections')}
-              className={`px-6 py-3 font-medium ${
-                activeTab === 'collections'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
-              }`}
-            >
-              Collections
-            </button>
-            <button
               onClick={() => setActiveTab('settings')}
               className={`px-6 py-3 font-medium ${
                 activeTab === 'settings'
@@ -202,114 +194,13 @@ export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
               label="Collections"
               value={stats.stats.collectionsCount}
               icon="📚"
+              onClick={stats.stats.collectionsCount > 0 ? () => setShowCollections(true) : undefined}
+              clickable={stats.stats.collectionsCount > 0}
             />
           </div>
 
-          {/* Recent Collections */}
-          {stats.collections && stats.collections.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border dark:border-gray-700">
-              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Collections</h2>
-              <div className="space-y-3">
-                {stats.collections.slice(0, 5).map((collectionSummary) => (
-                  <button
-                    key={collectionSummary.id}
-                    onClick={() => {
-                      const fullCollection: Collection = {
-                        id: collectionSummary.id,
-                        name: collectionSummary.name,
-                        description: collectionSummary.description ?? undefined,
-                        userId: stats.userId,
-                        createdAt: collectionSummary.createdAt,
-                        updatedAt: collectionSummary.updatedAt,
-                        quoteCount: collectionSummary.quotesCount
-                      };
-                      setSelectedCollection(fullCollection);
-                    }}
-                    className="w-full text-left p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800 dark:text-gray-100">{collectionSummary.name}</h3>
-                        {collectionSummary.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{collectionSummary.description}</p>
-                        )}
-                      </div>
-                      <div className="text-right ml-4">
-                        <div className="text-sm font-medium text-blue-600">
-                          {collectionSummary.quotesCount} {collectionSummary.quotesCount === 1 ? 'quote' : 'quotes'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Updated {new Date(collectionSummary.updatedAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {stats.collections.length > 5 && (
-                <button
-                  onClick={() => setActiveTab('collections')}
-                  className="mt-4 text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  View all {stats.collections.length} collections →
-                </button>
-              )}
-            </div>
-          )}
-
-          {stats.collections && stats.collections.length === 0 && (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-600">No collections yet. Start collecting your favorite quotes!</p>
-            </div>
-          )}
+          {/* Future: Top Favorite Quotes & Pinned Collections Showcase */}
         </>
-      )}
-
-      {activeTab === 'collections' && isOwnProfile && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">All Collections</h2>
-          {stats.collections && stats.collections.length > 0 ? (
-            <div className="space-y-3">
-              {stats.collections.map((collection) => (
-                <button
-                  key={collection.id}
-                  onClick={() => {
-                    const fullCollection: Collection = {
-                      id: collection.id,
-                      name: collection.name,
-                      description: collection.description ?? undefined,
-                      userId: stats.userId,
-                      createdAt: collection.createdAt,
-                      updatedAt: collection.updatedAt,
-                      quoteCount: collection.quotesCount
-                    };
-                    setSelectedCollection(fullCollection);
-                  }}
-                  className="w-full text-left p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800 dark:text-gray-100">{collection.name}</h3>
-                      {collection.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{collection.description}</p>
-                      )}
-                    </div>
-                    <div className="text-right ml-4">
-                      <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                        {collection.quotesCount} {collection.quotesCount === 1 ? 'quote' : 'quotes'}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Updated {new Date(collection.updatedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-600 dark:text-gray-400 text-center py-8">No collections yet.</p>
-          )}
-        </div>
       )}
 
       {activeTab === 'settings' && isOwnProfile && (
@@ -332,6 +223,16 @@ export default function ProfilePage({ userId, onUserClick }: ProfilePageProps) {
           userId={stats.userId}
           userName={stats.user.displayName || stats.userName}
           onClose={() => setShowLikedQuotes(false)}
+        />
+      )}
+
+      {/* Collections List Modal */}
+      {showCollections && stats && (
+        <CollectionsListView
+          userId={stats.userId}
+          userName={stats.user.displayName || stats.userName}
+          onClose={() => setShowCollections(false)}
+          onCollectionClick={(collection) => setSelectedCollection(collection)}
         />
       )}
     </div>
