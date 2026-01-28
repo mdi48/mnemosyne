@@ -135,6 +135,26 @@ class ApiClient {
     return this.request<PaginatedResponse<Quote>>(endpoint);
   }
 
+  async getFeed(params?: {
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResponse<Quote>> {
+    const searchParams = new URLSearchParams();
+
+    if (params) {
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined) {
+          searchParams.append(key, String(val));
+        }
+      });
+    }
+
+    const endpoint = `/quotes/feed${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    return this.request<PaginatedResponse<Quote>>(endpoint);
+  }
+
   // Endpoints for Quotes
   async getRandomQuote(): Promise<ApiResponse<Quote>> {
     return this.request<ApiResponse<Quote>>('/quotes/random');
