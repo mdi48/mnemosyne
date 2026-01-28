@@ -1,9 +1,20 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ActivityFeed from '../components/ActivityFeed';
 import { ThemeToggle } from '../components/ThemeToggle';
+import AuthModal from '../components/AuthModal';
 
 export default function ActivityPage() {
   const navigate = useNavigate();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const handleUserClick = (userId: string) => {
+    if (userId === 'discover') {
+      navigate('/discover');
+    } else {
+      navigate(`/profile/${userId}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -21,9 +32,14 @@ export default function ActivityPage() {
       </div>
       <div className="max-w-4xl mx-auto px-4">
         <ActivityFeed 
-          onUserClick={(userId) => navigate(`/profile/${userId}`)}
+          onUserClick={handleUserClick}
+          onAuthRequired={() => setShowAuthModal(true)}
         />
       </div>
+
+      {showAuthModal && (
+        <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      )}
     </div>
   );
 }
