@@ -1,46 +1,69 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../services/api';
-import type { Activity } from '../types';
+import type { Quote } from '../types';
+import { LikeButton } from './LikeButton';
+import { ShareButton } from './ShareButton';
+import { AddToCollectionButton } from './AddToCollectionButton';
 
 interface ActivityFeedProps {
-  userId?: string; // If provided, shows that user's feed; otherwise shows global feed
-  limit?: number;
   onUserClick?: (userId: string) => void; // Callback when username is clicked
+  onAuthRequired?: () => void;
 }
 
-export default function ActivityFeed({ userId, limit = 50, onUserClick }: ActivityFeedProps) {
-  const [activities, setActivities] = useState<Activity[]>([]);
+export default function ActivityFeed({ onUserClick, onAuthRequired }: ActivityFeedProps) {
+  const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const loadActivityFeed = useCallback(async () => {
+  const loadFeed = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      let response;
-      if (userId) {
-        response = await apiClient.getUserActivityFeed(userId, limit);
-      } else {
-        response = await apiClient.getGlobalActivityFeed(limit);
-      }
+      console.log('[ActivityFeed] Loading feed...');
+      const response = await apiClient.getFeed({
+        page,
+        limit: 20,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+
+      console.log('[ActivityFeed] Response:', response);
 
       if (response.success && response.data) {
-        setActivities(response.data);
+        setQuotes(response.data);
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages);
+        }
       } else {
-        setError(response.error || 'Failed to load activity feed');
+        console.error('[ActivityFeed] Error in response:', response.error);
+        setError(response.error || 'Failed to load feed');
       }
     } catch (err) {
-      console.error('Error loading activity feed:', err);
-      setError('Failed to load activity feed');
+      console.error('[ActivityFeed] Error loading feed:', err);
+      setError('Failed to load feed');
     } finally {
       setLoading(false);
     }
-  }, [userId, limit]);
+  }, [page]);
 
   useEffect(() => {
-    loadActivityFeed();
-  }, [loadActivityFeed]);
+    loadFeed();
+  }, [loadFeed]);
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -58,123 +81,148 @@ export default function ActivityFeed({ userId, limit = 50, onUserClick }: Activi
     );
   }
 
-  if (activities.length === 0) {
+  if (quotes.length === 0) {
     return (
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
-        <p className="text-gray-600 dark:text-gray-300">No activity yet. Start liking quotes and creating collections!</p>
+        <p className="text-gray-600 dark:text-gray-300 mb-4">
+          Your feed is empty. Follow some users to see their quotes here!
+        </p>
+        <button
+          onClick={() => onUserClick?.('discover')}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+        >
+          Discover Users
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
-        {userId ? 'User Activity' : 'Recent Activity'}
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+        Your Feed
       </h2>
       
-      <div className="space-y-3">
-        {activities.map((activity) => (
-          <ActivityItem key={activity.id} activity={activity} onUserClick={onUserClick} />
+      <div className="space-y-4">
+        {quotes.map((quote) => (
+          <QuoteCard
+            key={quote.id}
+            quote={quote}
+            onUserClick={onUserClick}
+            onAuthRequired={onAuthRequired}
+          />
         ))}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-6">
+          <button
+            onClick={handlePreviousPage}
+            disabled={page === 1}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+          >
+            Previous
+          </button>
+          <span className="text-gray-700 dark:text-gray-300">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={page === totalPages}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-interface ActivityItemProps {
-  activity: Activity;
+interface QuoteCardProps {
+  quote: Quote;
   onUserClick?: (userId: string) => void;
+  onAuthRequired?: () => void;
 }
 
-function ActivityItem({ activity, onUserClick }: ActivityItemProps) {
-  const getActivityIcon = () => {
-    switch (activity.activityType) {
-      case 'like':
-        return '❤️';
-      case 'collectionCreate':
-        return '📚';
-      case 'collectionUpdate':
-        return '✏️';
-      case 'quoteAdd':
-        return '💬';
-      default:
-        return '📌';
-    }
-  };
-
-  const getActivityText = () => {
-    switch (activity.activityType) {
-      case 'like':
-        return 'liked a quote';
-      case 'collectionCreate':
-        return 'created a collection';
-      case 'collectionUpdate':
-        return activity.quote ? 'added a quote to' : 'updated';
-      case 'quoteAdd':
-        return 'added a new quote';
-      default:
-        return 'performed an action';
-    }
-  };
-
+function QuoteCard({ quote, onUserClick, onAuthRequired }: QuoteCardProps) {
   const getTimeAgo = (date: string) => {
     const now = new Date();
-    const activityDate = new Date(date);
-    const seconds = Math.floor((now.getTime() - activityDate.getTime()) / 1000);
+    const quoteDate = new Date(date);
+    const seconds = Math.floor((now.getTime() - quoteDate.getTime()) / 1000);
 
     if (seconds < 60) return 'just now';
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
     if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
     if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    return activityDate.toLocaleDateString();
+    return quoteDate.toLocaleDateString();
   };
 
+  // For activity feed items, show who liked the quote
+  const likedByUser = quote.likedBy;
+  const activityTime = quote.likedAt || quote.createdAt;
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow border dark:border-gray-700">
-      <div className="flex items-start gap-3">
-        {/* Icon */}
-        <div className="shrink-0 w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl">
-          {getActivityIcon()}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <button
-              onClick={() => onUserClick?.(activity.userId)}
-              className="font-semibold text-gray-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              {activity.userName}
-            </button>
-            <span className="text-gray-600 dark:text-gray-400">{getActivityText()}</span>
-            {activity.collection && activity.activityType !== 'collectionCreate' && (
-              <span className="font-semibold text-gray-800 dark:text-gray-100">{activity.collection.name}</span>
-            )}
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow border dark:border-gray-700">
+      {/* Activity header - who liked this */}
+      {likedByUser && (
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+          <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
+            {(likedByUser.displayName || likedByUser.username || 'U')[0].toUpperCase()}
           </div>
-
-          {/* Quote preview */}
-          {activity.quote && (
-            <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-blue-500">
-              <p className="text-gray-800 dark:text-gray-100 italic">"{activity.quote.text}"</p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">— {activity.quote.author}</p>
-            </div>
-          )}
-
-          {/* Collection info (for collectionCreate) */}
-          {activity.collection && activity.activityType === 'collectionCreate' && (
-            <div className="mt-2 p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg border-l-4 border-purple-500">
-              <p className="font-semibold text-gray-800 dark:text-gray-100">{activity.collection.name}</p>
-              {activity.collection.description && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{activity.collection.description}</p>
-              )}
-            </div>
-          )}
-
-          {/* Timestamp */}
-          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            {getTimeAgo(activity.createdAt)}
+          <div className="flex-1">
+            <span className="text-gray-600 dark:text-gray-300">
+              <button
+                onClick={() => likedByUser.id && onUserClick?.(likedByUser.id)}
+                className="font-semibold text-gray-800 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                {likedByUser.displayName || likedByUser.username}
+              </button>
+              {' liked this quote'}
+            </span>
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {getTimeAgo(activityTime)}
           </div>
         </div>
+      )}
+
+      {/* Quote content */}
+      <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border-l-4 border-blue-500">
+        <p className="text-lg text-gray-800 dark:text-gray-100 italic mb-2">
+          "{quote.text}"
+        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          — {quote.author}
+        </p>
+      </div>
+
+      {/* Category & Tags */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-sm">
+          {quote.category}
+        </span>
+        {quote.tags?.map((tag) => (
+          <span
+            key={tag}
+            className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
+          >
+            #{tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+        <LikeButton
+          quoteId={quote.id}
+          initialLikeCount={quote.likeCount || 0}
+          initialIsLiked={quote.isLikedByUser || false}
+          onAuthRequired={onAuthRequired}
+        />
+        <ShareButton quote={quote} />
+        <AddToCollectionButton quoteId={quote.id} onAuthRequired={onAuthRequired} />
       </div>
     </div>
   );
