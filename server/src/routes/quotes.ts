@@ -163,6 +163,186 @@ router.get('/random', optionalAuth, async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/quotes/feed - Get quotes from followed users
+router.get('/feed', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    
+    // Debug: Get current user info
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, username: true }
+    });
+    console.log('[FEED] Current user:', currentUser?.username, '(ID:', userId, ')');
+    
+    const {
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      page = '1',
+      limit = '10'
+    } = req.query;
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Get list of users the current user is following (with public likes only)
+    const following = await prisma.follow.findMany({
+      where: { 
+        followerId: userId,
+        following: {
+          likesPrivate: false
+        }
+      },
+      select: { 
+        followingId: true,
+        following: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true,
+            likesPrivate: true
+          }
+        }
+      }
+    });
+
+    const followingIds = following.map(f => f.followingId);
+    
+    // Debug: Show who the user is following with public likes
+    const followingDetails = following.map(f => ({
+      id: f.followingId,
+      username: f.following.username,
+      likesPrivate: f.following.likesPrivate
+    }));
+    console.log('[FEED] Following with public likes:', JSON.stringify(followingDetails));
+
+    // If not following anyone with public likes, return empty feed
+    if (followingIds.length === 0) {
+      console.log('[FEED] Not following anyone with public likes');
+      const response: PaginatedResponse<any[]> = {
+        success: true,
+        data: [],
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: 0,
+          totalPages: 0
+        }
+      };
+      return res.json(response);
+    }
+
+    // Get recent likes from followed users
+    const recentLikes = await prisma.quoteLike.findMany({
+      where: {
+        userId: { in: followingIds }
+      },
+      orderBy: {
+        createdAt: sortOrder as 'asc' | 'desc'
+      },
+      skip,
+      take: limitNum,
+      include: {
+        quote: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatarUrl: true
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            avatarUrl: true
+          }
+        }
+      }
+    });
+
+    const total = await prisma.quoteLike.count({
+      where: {
+        userId: { in: followingIds }
+      }
+    });
+    
+    console.log('[FEED] Found likes:', recentLikes.length, 'Total:', total);
+    
+    // Debug: Show who actually liked the quotes
+    const likeDetails = recentLikes.map(like => ({
+      quoteText: like.quote.text.substring(0, 30) + '...',
+      likedByUsername: like.user.username,
+      likedByDisplayName: like.user.displayName,
+      likedById: like.user.id
+    }));
+    console.log('[FEED] Likes details:', JSON.stringify(likeDetails, null, 2));
+
+    // Transform to quote format with like info
+    const quotesWithLikes = await Promise.all(
+      recentLikes.map(async (like) => {
+        const quote = like.quote;
+        const likeCount = await prisma.quoteLike.count({
+          where: { quoteId: quote.id }
+        });
+
+        const userLike = await prisma.quoteLike.findUnique({
+          where: {
+            userId_quoteId: {
+              userId,
+              quoteId: quote.id
+            }
+          }
+        });
+
+        return {
+          id: quote.id,
+          text: quote.text,
+          author: quote.author,
+          category: quote.category,
+          tags: quote.tags ? quote.tags.split(',') : [],
+          isPublic: quote.isPublic,
+          createdAt: quote.createdAt.toISOString(),
+          updatedAt: quote.updatedAt.toISOString(),
+          userId: quote.userId,
+          user: quote.user,
+          likeCount,
+          isLikedByUser: !!userLike,
+          likedBy: like.user, // Who liked this quote (for activity context)
+          likedAt: like.createdAt.toISOString() // When it was liked
+        };
+      })
+    );
+
+    const response: PaginatedResponse<any> = {
+      success: true,
+      data: quotesWithLikes,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum)
+      }
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Error fetching feed:', error);
+    const response: ApiResponse<null> = {
+      success: false,
+      error: 'Failed to fetch feed'
+    };
+    res.status(500).json(response);
+  }
+});
+
 // GET /api/quotes/:id - Get a specific quote by ID
 router.get('/:id', optionalAuth, async (req: Request, res: Response) => {
   try {
@@ -216,9 +396,10 @@ router.get('/:id', optionalAuth, async (req: Request, res: Response) => {
 });
 
 // POST /api/quotes - Create a new quote
-router.post('/', validateBody(createQuoteSchema), async (req: Request, res: Response) => {
+router.post('/', authenticate, validateBody(createQuoteSchema), async (req: Request, res: Response) => {
   try {
     const { text, author, category, tags, source, isPublic } = req.body;
+    const userId = req.user!.userId;
 
     const newQuote = await quoteService.createQuote({
       text,
@@ -226,7 +407,8 @@ router.post('/', validateBody(createQuoteSchema), async (req: Request, res: Resp
       category,
       tags,
       source,
-      isPublic
+      isPublic,
+      userId
     });
 
     const response: ApiResponse<typeof newQuote> = {
