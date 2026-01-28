@@ -97,7 +97,7 @@ class QuoteService {
     return this.formatQuote(quote);
   }
 
-  async createQuote(quoteData: CreateQuoteRequest): Promise<Quote> {
+  async createQuote(quoteData: CreateQuoteRequest & { userId?: string }): Promise<Quote> {
     const quote = await prisma.quote.create({
       data: {
         text: quoteData.text,
@@ -105,7 +105,8 @@ class QuoteService {
         category: quoteData.category,
         tags: quoteData.tags?.join(','),
         source: quoteData.source,
-        isPublic: quoteData.isPublic ?? true
+        isPublic: quoteData.isPublic ?? true,
+        userId: quoteData.userId
       }
     });
     
