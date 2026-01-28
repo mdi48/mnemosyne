@@ -4,9 +4,10 @@ import type { Collection } from '../types';
 
 interface AddToCollectionButtonProps {
   quoteId: string;
+  onAuthRequired?: () => void;
 }
 
-export function AddToCollectionButton({ quoteId }: AddToCollectionButtonProps) {
+export function AddToCollectionButton({ quoteId, onAuthRequired }: AddToCollectionButtonProps) {
   const [showModal, setShowModal] = useState(false);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,7 @@ export function AddToCollectionButton({ quoteId }: AddToCollectionButtonProps) {
     } catch (err) {
       setError('Failed to load collections');
       console.error(err);
+      onAuthRequired?.();
     } finally {
       setLoading(false);
     }
@@ -53,6 +55,8 @@ export function AddToCollectionButton({ quoteId }: AddToCollectionButtonProps) {
       const error = err as Error;
       if (error.message?.includes('already in collection')) {
         setError('Quote is already in this collection');
+      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        onAuthRequired?.();
       } else {
         setError('Failed to add quote to collection');
       }
