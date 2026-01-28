@@ -13,6 +13,7 @@ async function main() {
   // Clear existing data
   console.log('Clearing existing data...');
   await prisma.quoteLike.deleteMany({});
+  await prisma.follow.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.quote.deleteMany({});
   console.log('Database cleared.');
@@ -46,7 +47,11 @@ async function main() {
   // Create sample quotes
   console.log('Creating sample quotes...');
   const quotes = [];
-  for (const quote of sampleQuotes) {
+  for (let i = 0; i < sampleQuotes.length; i++) {
+    const quote = sampleQuotes[i];
+    // Alternate assigning quotes to John and Jane
+    const userId = i % 2 === 0 ? john.id : jane.id;
+    
     const createdQuote = await prisma.quote.create({
       data: {
         text: quote.text,
@@ -54,7 +59,8 @@ async function main() {
         category: quote.category,
         tags: quote.tags?.join(','),
         source: quote.source,
-        isPublic: quote.isPublic ?? true
+        isPublic: quote.isPublic ?? true,
+        userId: userId
       }
     });
     quotes.push(createdQuote);
@@ -87,6 +93,26 @@ async function main() {
   }
   
   console.log('Created sample likes for users!');
+  
+  // Create follow relationships
+  console.log('Creating follow relationships...');
+  // John follows Jane
+  await prisma.follow.create({
+    data: {
+      followerId: john.id,
+      followingId: jane.id,
+    },
+  });
+  
+  // Jane follows John
+  await prisma.follow.create({
+    data: {
+      followerId: jane.id,
+      followingId: john.id,
+    },
+  });
+  
+  console.log('Created follow relationships!');
 }
 
 main()
