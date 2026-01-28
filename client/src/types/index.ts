@@ -10,6 +10,21 @@ export interface Quote {
   isPublic?: boolean;
   likeCount?: number;
   isLikedByUser?: boolean;
+  userId?: string;
+  user?: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  };
+  // Activity feed fields - who liked this quote
+  likedBy?: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  };
+  likedAt?: string;
 }
 
 export interface Category {
